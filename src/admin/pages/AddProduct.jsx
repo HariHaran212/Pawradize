@@ -72,7 +72,7 @@ export default function AddProduct() {
                 <h3 className="text-lg font-semibold text-text-dark mb-4">Product Image</h3>
                 <div className="w-full h-48 bg-ivory rounded-lg border-2 border-dashed border-accent flex items-center justify-center text-center">
                     {imagePreview ? (
-                        <img src={imagePreview} alt="Product Preview" className="w-full h-full object-cover rounded-lg" />
+                        <img src={imagePreview} alt="Product Preview" className="w-full h-full object-cover rounded-lg" loading="lazy" />
                     ) : (
                         <div className="text-text-medium">
                             <BsUpload size={32} className="mx-auto mb-2"/>

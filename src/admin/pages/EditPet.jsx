@@ -102,7 +102,7 @@ export default function EditPet() {
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-md">
             <h3 className="text-lg font-semibold text-text-dark mb-4">Pet Image</h3>
-            <div className="w-full h-48 bg-ivory rounded-lg border-2 border-dashed border-accent flex items-center justify-center">{imagePreview ? <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-lg" /> : <BsUpload size={32} className="text-text-medium"/>}</div>
+            <div className="w-full h-48 bg-ivory rounded-lg border-2 border-dashed border-accent flex items-center justify-center">{imagePreview ? <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-lg" loading="lazy" /> : <BsUpload size={32} className="text-text-medium"/>}</div>
             <input type="file" onChange={handleFileChange} className="mt-4 w-full text-sm" accept="image/*" />
           </div>
           <div className="bg-white p-6 rounded-2xl shadow-md">

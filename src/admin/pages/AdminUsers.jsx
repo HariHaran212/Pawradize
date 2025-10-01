@@ -133,7 +133,7 @@ export default function AdminUsers() {
               {filteredUsers.map(user => (
                 <tr key={user.id} className="border-b border-accent hover:bg-ivory/50">
                   <td className="p-4 flex items-center gap-4">
-                    <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
+                    <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" loading="lazy" />
                     <span className="font-medium text-text-dark">{user.name}</span>
                   </td>
                   <td className="p-4">{user.email}</td>

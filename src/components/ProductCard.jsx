@@ -11,6 +11,7 @@ const ProductCard = ({ product }) => {
           src={product.image} 
           alt={product.name}
           className="w-full h-48 object-contain transform group-hover:scale-105 transition-transform duration-500 p-4"
+          loading="lazy"
         />
       </div>
       <p className="text-text-light text-sm">{product.category}</p>

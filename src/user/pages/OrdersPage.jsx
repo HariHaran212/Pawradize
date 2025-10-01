@@ -78,7 +78,7 @@ export default function OrdersPage() {
 								<h4 className="font-semibold text-text-dark">Items in this order:</h4>
 								{order.items.map(item => (
 									<div key={item.id} className="flex items-center gap-4">
-											<img src={item.img} alt={item.name} className="w-16 h-16 rounded-lg object-cover"/>
+											<img src={item.img} alt={item.name} className="w-16 h-16 rounded-lg object-cover" loading="lazy" />
 											<div className="flex-grow">
 													<p className="font-medium text-text-dark">{item.name}</p>
 													<p className="text-sm text-text-medium">Qty: {item.quantity} • ₹{item.price.toLocaleString()}</p>

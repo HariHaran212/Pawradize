@@ -101,7 +101,7 @@ export default function ProductDetailPage() {
             {/* --- Existing Product Details --- */}
             <div className="grid md:grid-cols-2 gap-10">
                 <div>
-                    <img src={product.img} alt={product.title} className="w-full h-auto object-cover rounded-2xl" />
+                    <img src={product.img} alt={product.title} className="w-full h-auto object-cover rounded-2xl" loading="lazy" />
                 </div>
                 <div className="flex flex-col">
                     <h1 className="text-3xl font-bold text-text-dark">{product.title}</h1>

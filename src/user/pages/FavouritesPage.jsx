@@ -77,7 +77,7 @@ export default function FavoritesPage() {
                       <BsHeartFill size={18}/>
                     </button>
                     <Link to={`/pet/${pet.id}`} className="block">
-                      <img src={pet.img} alt={pet.name} className="w-full h-48 object-cover"/>
+                      <img src={pet.img} alt={pet.name} className="w-full h-48 object-cover" loading="lazy" />
                       <div className="p-4">
                         <h3 className="font-bold text-lg text-primary">{pet.name}</h3>
                         <p className="text-sm text-text-medium">{pet.type} • {pet.age}</p>
@@ -101,7 +101,7 @@ export default function FavoritesPage() {
                       <BsHeartFill size={18}/>
                     </button>
                     <Link to={`/product/${product.id}`} className="block">
-                      <img src={product.img} alt={product.title} className="w-full h-48 object-cover"/>
+                      <img src={product.img} alt={product.title} className="w-full h-48 object-cover" loading="lazy" />
                       <div className="p-4">
                         <h3 className="font-semibold text-text-dark">{product.title}</h3>
                         <div className="mt-2 flex items-center justify-between">

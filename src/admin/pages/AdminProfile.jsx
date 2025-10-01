@@ -80,7 +80,7 @@ export default function AdminProfile() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-accent pb-6 mb-6">
             <div className="relative group">
-              <img src={profileData.avatar} alt="Admin Avatar" className="w-24 h-24 rounded-full border-4 border-secondary object-cover" />
+              <img src={profileData.avatar} alt="Admin Avatar" className="w-24 h-24 rounded-full border-4 border-secondary object-cover" loading="lazy" />
               {isEditing && (
                 <div onClick={() => fileInputRef.current.click()} className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   <FaCamera size={24} />

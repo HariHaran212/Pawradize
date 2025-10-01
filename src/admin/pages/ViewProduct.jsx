@@ -50,7 +50,7 @@ export default function ViewProduct() {
             <div className="grid md:grid-cols-3 gap-8">
                 {/* Image Column */}
                 <div className="md:col-span-1">
-                    <img src={product.img} alt={product.name} className="w-full h-auto object-cover rounded-lg"/>
+                    <img src={product.img} alt={product.name} className="w-full h-auto object-cover rounded-lg" loading="lazy" />
                 </div>
                 {/* Details Column */}
                 <div className="md:col-span-2 space-y-4">

@@ -12,6 +12,7 @@ export default function PetCard({ pet }) {
             src={pet.img} 
             alt={pet.name} 
             className="object-cover h-full w-full group-hover:scale-105 transition-transform duration-300" 
+            loading="lazy"
           />
         </div>
         <div className="p-4">

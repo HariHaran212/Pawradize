@@ -37,7 +37,7 @@ export default function AdminPets() {
             {samplePets.map(pet => (
               <tr key={pet.id} className="border-b border-accent hover:bg-ivory/50">
                 <td className="p-4 flex items-center gap-4">
-                  <img src={pet.img} alt={pet.name} className="w-12 h-12 rounded-lg object-cover" />
+                  <img src={pet.img} alt={pet.name} className="w-12 h-12 rounded-lg object-cover" loading="lazy" />
                   <span className="font-medium text-text-dark">{pet.name}</span>
                 </td>
                 <td className="p-4">{pet.breed}</td>

@@ -22,7 +22,7 @@ export default function FullGuidePage() {
         </header>
 
         <div className="bg-ivory rounded-2xl overflow-hidden mb-8">
-          <img src={guide.heroImage} alt={guide.title} className="w-full h-80 object-cover"/>
+          <img src={guide.heroImage} alt={guide.title} className="w-full h-80 object-cover" loading="lazy" />
         </div>
 
         {/* This renders the HTML content from your data file */}

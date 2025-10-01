@@ -27,7 +27,7 @@ export default function ShopPage() {
         {sampleProducts.map(p => (
           <Link key={p.id} to={`/product/${p.id}`} className="bg-white rounded-2xl shadow-lg shadow-grey/50 overflow-hidden flex flex-col group">
             <div className="overflow-hidden">
-              <img src={p.img} alt={p.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+              <img src={p.img} alt={p.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
             </div>
             <div className="p-4 flex flex-col flex-grow">
               <h3 className="font-semibold text-text-dark flex-grow">{p.title}</h3>

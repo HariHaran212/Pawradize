@@ -83,7 +83,7 @@ export default function AdminProducts() {
                   >
                     <td className="p-4 flex items-center gap-4 cursor-pointer">
                       <Link to={`${basePath}/products/view/${product.id}`} className="flex items-center gap-4">
-                        <img src={product.img} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
+                        <img src={product.img} alt={product.name} className="w-12 h-12 rounded-lg object-cover" loading="lazy" />
                         <span className="font-medium text-text-dark">{product.name}</span>
                       </Link>
                     </td>

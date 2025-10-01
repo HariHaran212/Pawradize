@@ -21,7 +21,7 @@ export default function PetGuidesHub() {
             className="block bg-white rounded-2xl shadow-lg overflow-hidden group transition-transform duration-300 hover:-translate-y-1"
           >
             <div className="h-48 overflow-hidden">
-              <img src={guide.heroImage} alt={guide.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              <img src={guide.heroImage} alt={guide.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
             </div>
             <div className="p-6">
               <p className="text-secondary font-semibold text-sm">{guide.subtitle}</p>

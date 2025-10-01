@@ -83,7 +83,7 @@ export default function EditProduct() {
              <div className="bg-white p-6 rounded-2xl shadow-md">
                 <h3 className="text-lg font-semibold text-text-dark mb-4">Product Image</h3>
                 <div className="w-full h-48 bg-ivory rounded-lg border-2 border-dashed border-accent flex items-center justify-center text-center">
-                    {imagePreview ? <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-lg" /> : <div><BsUpload size={32} className="mx-auto mb-2"/><p>Upload Image</p></div>}
+                    {imagePreview ? <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-lg" loading="lazy" /> : <div><BsUpload size={32} className="mx-auto mb-2"/><p>Upload Image</p></div>}
                 </div>
 								<label className="mt-4 w-full flex items-center justify-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg shadow hover:bg-secondary transition cursor-pointer">
 								Upload New Picture

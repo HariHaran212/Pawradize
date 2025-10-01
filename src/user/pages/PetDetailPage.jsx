@@ -38,7 +38,7 @@ export default function PetDetailPage() {
           
           {/* Left Column: Pet Image */}
           <div>
-            <img src={pet.img} alt={pet.name} className="w-full h-auto object-cover rounded-2xl" />
+            <img src={pet.img} alt={pet.name} className="w-full h-auto object-cover rounded-2xl" loading="lazy" />
           </div>
 
           {/* Right Column: Pet Details */}

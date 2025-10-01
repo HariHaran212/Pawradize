@@ -50,7 +50,7 @@ export default function Cart() {
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map(item => (
               <div key={item.id} className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-2xl shadow-md shadow-accent/30">
-                <img src={item.img} alt={item.name} className="w-24 h-24 object-cover rounded-lg flex-shrink-0" />
+                <img src={item.img} alt={item.name} className="w-24 h-24 object-cover rounded-lg flex-shrink-0" loading="lazy" />
                 
                 <div className="flex-grow text-center sm:text-left">
                   <h3 className="font-semibold text-text-dark">{item.name}</h3>

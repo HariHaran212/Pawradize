@@ -124,7 +124,7 @@ export default function ViewOrders() {
                             {order.items.map(item => (
                                 <tr key={item.id} className="border-b border-accent">
                                     <td className="p-3 flex items-center gap-3">
-                                        <img src={item.img} alt={item.name} className="w-12 h-12 rounded-md object-cover"/>
+                                        <img src={item.img} alt={item.name} className="w-12 h-12 rounded-md object-cover" loading="lazy" />
                                         <span>{item.name}</span>
                                     </td>
                                     <td className="p-3 text-right">₹{item.price.toLocaleString()}</td>
