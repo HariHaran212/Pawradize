@@ -1,10 +1,76 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc"; // Google Icon
 import { FaApple } from "react-icons/fa"; // Optional other logins
+import axios from "axios";
+
+const API_URL = "http://localhost:2025";
+
 
 export default function AuthPage() {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+
+  // State for form inputs
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  
+  // State for handling errors and loading
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // --- 1. Handler for Manual Login/Registration ---
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Prevent default form submission
+    setError("");
+    setLoading(true);
+
+    const url = isLogin 
+      ? `${API_URL}/api/auth/login` 
+      : `${API_URL}/api/auth/register`;
+
+    const payload = isLogin
+      ? { email: email, password: password } // Backend expects 'email' for login
+      : { firstName: firstName, lastName: lastName, email: email, password: password };
+
+    try {
+      const response = await axios.post(url, payload);
+      
+      // console.log("Success:", response.data);
+
+      if (isLogin) {
+        // --- On successful login, save the token ---
+        const token = response.data.data.token;
+        localStorage.setItem("authToken", token); // Save token to local storage
+        // console.log(response);
+        
+        // Redirect user to the dashboard or home page
+        // window.location.href = '/dashboard'; 
+        navigate("/");
+      } else {
+        // On successful registration, switch to the login tab
+        alert("Registration successful! Please log in.");
+        setIsLogin(true);
+      }
+
+    } catch (err) {
+      // Handle errors from the backend
+      const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
+      setError(errorMessage);
+      console.error("Authentication error:", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- 2. Handler for Google Login ---
+  const handleGoogleLogin = () => {
+    // This is not an API call. It's a full page redirect to the backend's OAuth2 endpoint.
+    console.log("Redirecting to Google OAuth2...");
+    window.location.href = `${API_URL}/oauth2/authorization/google`;
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
@@ -30,21 +96,40 @@ export default function AuthPage() {
         </div>
 
         {/* Form */}
-        <form className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Full Name</label>
-              <input
-                type="text"
-                className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary outline-none"
-                placeholder="Enter your name"
-              />
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">First Name</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary outline-none"
+                  placeholder="Enter your First name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary outline-none"
+                  placeholder="Enter your Last name"
+                />
+              </div>
+            </>
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
               className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary outline-none"
               placeholder="you@example.com"
             />
@@ -53,10 +138,17 @@ export default function AuthPage() {
             <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
               className="mt-1 w-full px-4 py-2 border rounded-lg focus:ring-primary focus:border-primary outline-none"
               placeholder="********"
             />
           </div>
+
+          {/* Display error message if it exists */}
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
           {!isLogin && (
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -72,9 +164,10 @@ export default function AuthPage() {
 
           <button
             type="submit"
+            disabled={loading}
             className="w-full py-2 bg-primary text-white font-semibold rounded-lg hover:bg-lightgreen transition"
           >
-            {isLogin ? "Login" : "Sign Up"}
+            {loading ? "Processing..." : (isLogin ? "Login" : "Sign Up")}
           </button>
         </form>
 
@@ -96,7 +189,9 @@ export default function AuthPage() {
 
         {/* Social Logins */}
         <div className="space-y-3">
-          <button className="w-full flex items-center justify-center gap-3 py-2 border rounded-lg hover:bg-gray-50 transition">
+          <button 
+            onClick={handleGoogleLogin} // Attach Google handler
+            className="w-full flex items-center justify-center gap-3 py-2 border rounded-lg hover:bg-gray-50 transition">
             <FcGoogle size={22} />
             <span className="text-sm font-medium">Continue with Google</span>
           </button>

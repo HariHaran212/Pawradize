@@ -2,44 +2,70 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../layouts/AdminLayout';
 import { Link, useParams } from 'react-router-dom';
 import AdminPageContainer from '../components/AdminPageContainer';
+import axios from 'axios';
+
+const API_URL = "http://localhost:2025";
 
 const sampleProducts = [
-  { id: 101, img: "/assets/Dog-food.jpg", name: "Premium Dog Food 10kg", price: 1499, stock: 58, category: "Food", description: "A balanced, protein-rich formula designed for adult dogs to support muscle growth and a healthy coat. Made with real chicken and whole grains.", sku: 'PWD-F-001', dateAdded: '2025-08-01' },
+  { id: 101, img: "/assets/Dog-food.jpg", name: "Premium Dog Food 10kg", price: 1499, stockQuantity: 58, category: "Food", description: "A balanced, protein-rich formula designed for adult dogs to support muscle growth and a healthy coat. Made with real chicken and whole grains.", sku: 'PWD-F-001', dateAdded: '2025-08-01' },
   // ... other product data
 ];
 
-const stockStatus = (stock) => {
-    if (stock <= 0) return { text: 'Out of Stock', style: 'bg-red-100 text-red-800' };
-    if (stock <= 10) return { text: 'Low Stock', style: 'bg-yellow-100 text-yellow-800' };
+const stockStatus = (stockQuantity) => {
+    if (stockQuantity <= 0) return { text: 'Out of Stock', style: 'bg-red-100 text-red-800' };
+    if (stockQuantity <= 10) return { text: 'Low Stock', style: 'bg-yellow-100 text-yellow-800' };
     return { text: 'In Stock', style: 'bg-green-100 text-green-800' };
 };
 
-export default function ViewProduct() {
-  const { id } = useParams();
+export default function ViewProduct() {const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const productToView = sampleProducts.find(p => p.id === parseInt(id));
-    setProduct(productToView);
+    const fetchProduct = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await axios.get(`${API_URL}/api/products/${id}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        setProduct(response.data.data);
+      } catch (err) {
+        setError('Could not load product data.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
   }, [id]);
 
-  if (!product) {
-    return (
-      <AdminLayout>
-        <div className="p-6 text-center">
-            <h2 className="text-xl font-semibold">Product not found.</h2>
-            <Link to="/admin/products" className="text-primary hover:underline mt-4 inline-block">← Back to Products</Link>
-        </div>
-      </AdminLayout>
-    );
+  if (loading) {
+      return <AdminLayout><p className="p-6 text-center">Loading product...</p></AdminLayout>;
   }
 
-  const status = stockStatus(product.stock);
+  if (error || !product) {
+      return (
+          <AdminLayout>
+              <div className="p-6 text-center">
+                  <h2 className="text-xl font-semibold">{error || 'Product not found.'}</h2>
+                  <Link to="/admin/products" className="text-primary hover:underline mt-4 inline-block">← Back to Products</Link>
+              </div>
+          </AdminLayout>
+      );
+  }
+
+  const status = stockStatus(product.stockQuantity);
 
   return (
     <AdminPageContainer>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
+        <Link to="/admin/products" className="text-secondary hover:underline">← Back to Products List</Link>
+
+        <div className="flex justify-between items-center my-6">
           <h1 className="text-2xl font-bold text-primary">Product Details</h1>
           <Link to={`/admin/products/edit/${product.id}`} className="bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
             Edit Product
@@ -50,7 +76,7 @@ export default function ViewProduct() {
             <div className="grid md:grid-cols-3 gap-8">
                 {/* Image Column */}
                 <div className="md:col-span-1">
-                    <img src={product.img} alt={product.name} className="w-full h-auto object-cover rounded-lg" loading="lazy" />
+                    <img src={product.imageUrl} alt={product.name} className="w-full h-auto object-cover rounded-lg" loading="lazy" />
                 </div>
                 {/* Details Column */}
                 <div className="md:col-span-2 space-y-4">
@@ -64,7 +90,7 @@ export default function ViewProduct() {
                          <div>
                             <p className="text-sm text-text-medium">Stock</p>
                             <div className="flex items-center gap-2">
-                                <p className="font-semibold text-lg">{product.stock}</p>
+                                <p className="font-semibold text-lg">{product.stockQuantity}</p>
                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${status.style}`}>{status.text}</span>
                             </div>
                         </div>
@@ -77,7 +103,6 @@ export default function ViewProduct() {
                             <p className="font-semibold">{product.category}</p>
                         </div>
                     </div>
-                    <Link to="/admin/products" className="text-secondary hover:underline">← Back to Products List</Link>
                 </div>
             </div>
         </div>

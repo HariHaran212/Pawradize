@@ -57,6 +57,7 @@ import AddPet from "./admin/pages/AddPet";
 import AdoptionCoordinatorLayout from "./layouts/AdoptionCoordinatorLayout";
 import AdminGuideEditor from "./admin/pages/AdminGuideEditor";
 import AdminContentPage from "./admin/pages/AdminContentPage";
+import ViewPet from "./admin/pages/ViewPet";
 // Import other admin pages like AdminOrders, AdminProducts, etc. here
 
 function App() {
@@ -76,10 +77,12 @@ function App() {
           <Route path="pets" element={<AdminPets />} />
           <Route path="pets/new" element={<AddPet />} />
           <Route path="pets/edit/:id" element={<EditPet />} />
+          <Route path="pets/view/:id" element={<ViewPet />} />
           <Route path="products/new" element={<AddProduct />} />
           <Route path="products/edit/:id" element={<EditProduct />} />
           <Route path="products/view/:id" element={<ViewProduct />} />
           <Route path="content" element={<AdminContentPage />} />
+          <Route path="guides/:slug" element={<FullGuidePage />} />
           <Route path="guides/new" element={<AdminGuideEditor />} />
           <Route path="guides/edit/:id" element={<AdminGuideEditor />} />
           <Route path="users" element={<AdminUsers />} />

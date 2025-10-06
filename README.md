@@ -1,7 +1,5 @@
 # 🐾 Pawradise - Pet Hub Frontend
 
-![Pawradise Logo Placeholder](https://via.placeholder.com/300x100.png?text=Pawradise+Logo)
-
 A modern, full-featured web application for "Pawradise," a fictional pet hub based in Coimbatore. This repository contains the complete frontend built with React, featuring a comprehensive user-facing website and a multi-level role-based admin panel.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

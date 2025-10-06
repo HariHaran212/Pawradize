@@ -1,28 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '../../layouts/AdminLayout';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BsUpload } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
+import axios from 'axios';
+import { useRole } from '../../context/RoleContext';
+import apiClient from '../../api/apiClient';
 
-const sampleProducts = [
-  { id: 101, img: "/assets/Dog-food.jpg", name: "Premium Dog Food 10kg", price: 1499, stock: 58, category: "Food", description: "A balanced diet for your dog." },
-  // ... other products
-];
+const API_URL = "http://localhost:2025";
 
 export default function EditProduct() {
   const { id } = useParams(); // Get product ID from URL
+  const { basePath } = useRole();
   const navigate = useNavigate();
   
-  const [productData, setProductData] = useState({ name: '', description: '', price: '', stock: '', category: 'Food' });
-  const [imagePreview, setImagePreview] = useState(null);
+  const [productData, setProductData] = useState({
+    name: '',
+    description: '',
+    price: 0,
+    stockQuantity: 0,
+    category: '',
+    brand: '',
+  });
+  const [sku, setSku] = useState('');
 
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // --- CHANGE: Fetch product data from the backend ---
   useEffect(() => {
-    // Find the product to edit and populate the form
-    const productToEdit = sampleProducts.find(p => p.id === parseInt(id));
-    if (productToEdit) {
-        setProductData(productToEdit);
-        setImagePreview(productToEdit.img);
-    }
+    const fetchProduct = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await axios.get(`${API_URL}/api/products/${id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const product = response.data.data;
+
+        // Populate form with fetched data
+        setProductData({
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            stockQuantity: Number(product.stockQuantity),
+            category: product.category,
+            brand: product.brand,
+        });
+
+        setSku(product.sku); // SKU is not editable
+        setImagePreview(product.imageUrl); // Set initial image preview from URL
+      } catch (err) {
+        setError("Failed to fetch product data.");
+      }
+    };
+    fetchProduct();
   }, [id]);
 
   const handleInputChange = (e) => {
@@ -30,16 +62,39 @@ export default function EditProduct() {
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setImagePreview(URL.createObjectURL(e.target.files[0]));
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file); // Store the actual file object
+      setImagePreview(URL.createObjectURL(file)); // Update the preview
     }
   };
   
-  const handleSubmit = (e) => {
+  // --- CHANGE: Implement submission to the backend ---
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Updating product:", { ...productData, image: imagePreview });
-    alert("Product updated successfully!");
-    navigate('/admin/products');
+    setLoading(true);
+    setError('');
+
+    const formData = new FormData();
+
+    formData.append('productData', new Blob([JSON.stringify(productData)], { type: "application/json" }));
+
+    // Only append the image file if a new one was selected
+    if (imageFile) {
+      formData.append('imageFile', imageFile);
+    }
+
+    try {
+      await apiClient.put(`/api/products/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      alert("Product updated successfully!");
+      navigate('/admin/products');
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update product.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,6 +105,10 @@ export default function EditProduct() {
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-md space-y-4">
+            <div>
+              <label className="block text-sm font-semibold mb-2">SKU</label>
+              <input type="text" name="sku" value={sku} onChange={handleInputChange} className="w-full border border-accent rounded-md p-2" disabled/>
+            </div>
              <div>
               <label className="block text-sm font-semibold mb-2">Product Name</label>
               <input type="text" name="name" value={productData.name} onChange={handleInputChange} className="w-full border border-accent rounded-md p-2" required/>
@@ -58,6 +117,10 @@ export default function EditProduct() {
               <label className="block text-sm font-semibold mb-2">Description</label>
               <textarea name="description" value={productData.description} onChange={handleInputChange} rows="6" className="w-full border border-accent rounded-md p-2"></textarea>
             </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2">Brand</label>
+              <input type="text" name="brand" value={productData.brand} onChange={handleInputChange} className="w-full border border-accent rounded-md p-2" required/>
+            </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold mb-2">Price (₹)</label>
@@ -65,7 +128,7 @@ export default function EditProduct() {
               </div>
                <div>
                 <label className="block text-sm font-semibold mb-2">Stock Quantity</label>
-                <input type="number" name="stock" value={productData.stock} onChange={handleInputChange} className="w-full border border-accent rounded-md p-2" required/>
+                <input type="number" name="stock" value={productData.stockQuantity} onChange={handleInputChange} className="w-full border border-accent rounded-md p-2" required/>
               </div>
             </div>
              <div>

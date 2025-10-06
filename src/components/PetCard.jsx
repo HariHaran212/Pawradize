@@ -9,7 +9,7 @@ export default function PetCard({ pet }) {
       <article>
         <div className="h-48 overflow-hidden">
           <img 
-            src={pet.img} 
+            src={pet.imageUrl} 
             alt={pet.name} 
             className="object-cover h-full w-full group-hover:scale-105 transition-transform duration-300" 
             loading="lazy"
@@ -17,8 +17,8 @@ export default function PetCard({ pet }) {
         </div>
         <div className="p-4">
           <h3 className="font-bold text-lg text-primary">{pet.name}</h3>
-          <p className="text-sm text-text-medium">{pet.type} • {pet.age || "Unknown age"}</p>
-          <p className="mt-2 text-sm text-text-dark">{pet.short || "Loving and ready for a new home."}</p>
+          <p className="text-sm text-text-medium">{pet.species} • {pet.age || "Unknown age"}</p>
+          <p className="mt-2 text-sm text-text-dark">{pet.shortDescription || "Loving and ready for a new home."}</p>
         </div>
       </article>
     </Link>

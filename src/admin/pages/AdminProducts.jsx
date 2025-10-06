@@ -3,6 +3,10 @@ import { BsPlusCircleFill, BsPencilSquare, BsTrash } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRole } from '../../context/RoleContext';
+import axios from 'axios';
+
+const API_URL = "http://localhost:2025"; // Your backend URL
+
 
 // Sample data for demonstration
 const sampleProducts = [
@@ -23,18 +27,55 @@ export default function AdminProducts() {
   const { basePath } = useRole();
 
 	const navigate = useNavigate();
-  const [products, setProducts] = useState(sampleProducts);
+  const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await axios.get(`${API_URL}/api/products`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setProducts(response.data.data);
+      } catch (err) {
+        setError('Failed to fetch products. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = (productId) => {
+  const handleDelete = async (productId) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
+      try {
+        const token = localStorage.getItem("authToken");
+        await axios.delete(`${API_URL}/api/products/${productId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        // On success, remove the product from the local state for instant UI update
         setProducts(products.filter(p => p.id !== productId));
+      } catch (err) {
+        alert("Failed to delete product. You may not have the required permissions.");
+      }
     }
   };
+
+  if (loading) return <AdminPageContainer><div>Loading products...</div></AdminPageContainer>;
+  if (error) return <AdminPageContainer><div>Error: {error}</div></AdminPageContainer>;
+
 
   return (
     <AdminPageContainer>
@@ -75,7 +116,7 @@ export default function AdminProducts() {
             </thead>
             <tbody>
               {filteredProducts.map(product => {
-                const status = stockStatus(product.stock);
+                const status = stockStatus(product.stockQuantity); 
                 return (
                   <tr 
                     key={product.id} 
@@ -83,13 +124,13 @@ export default function AdminProducts() {
                   >
                     <td className="p-4 flex items-center gap-4 cursor-pointer">
                       <Link to={`${basePath}/products/view/${product.id}`} className="flex items-center gap-4">
-                        <img src={product.img} alt={product.name} className="w-12 h-12 rounded-lg object-cover" loading="lazy" />
+                        <img src={product.imageUrl} alt={product.name} className="w-12 h-12 rounded-lg object-cover" loading="lazy" />
                         <span className="font-medium text-text-dark">{product.name}</span>
                       </Link>
                     </td>
                     
                     <td className="p-4">₹{product.price.toLocaleString()}</td>
-                    <td className="p-4 font-medium">{product.stock}</td>
+                    <td className="p-4 font-medium">{product.stockQuantity}</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${status.style}`}>
                         {status.text}

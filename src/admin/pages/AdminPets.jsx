@@ -3,6 +3,10 @@ import { BsPlusCircleFill, BsPencilSquare, BsTrash } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import { Link } from 'react-router-dom';
 import { useRole } from '../../context/RoleContext';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const API_URL = "http://localhost:2025";
 
 const samplePets = [
     { id: 11, img: "/assets/Dog-1.jpg", name: "Buddy", breed: "Golden Retriever Mix", status: "Available" },
@@ -10,8 +14,63 @@ const samplePets = [
     { id: 13, img: "/assets/Rabbit-1.jpg", name: "Pip", breed: "Holland Lop", status: "Adopted" },
 ];
 
-export default function AdminPets() {
-  const { basePath } = useRole();
+export default function AdminPets() {  const { basePath } = useRole();
+  const [pets, setPets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch pets from the backend when the component mounts
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        const response = await axios.get(`${API_URL}/api/pets`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setPets(response.data.data);
+      } catch (err) {
+        setError('Could not fetch pet data. Please try again later.');
+        console.error('Fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPets();
+  }, []); // The empty dependency array ensures this runs only once
+
+  // Function to handle the deletion of a pet
+  const handleDelete = async (petId) => {
+    if (window.confirm('Are you sure you want to delete this pet listing? This action cannot be undone.')) {
+      setLoading(true);
+      
+      try {
+        const token = localStorage.getItem("authToken");
+        await axios.delete(`${API_URL}/api/pets/${petId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        // Remove the deleted pet from the state to update the UI instantly
+        setPets(currentPets => currentPets.filter(pet => pet.id !== petId));
+      } catch (err) {
+        alert('Failed to delete the pet listing.');
+        console.error('Delete error:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  if (loading) {
+    return <AdminPageContainer><p>Loading pets...</p></AdminPageContainer>;
+  }
+
+  if (error) {
+    return <AdminPageContainer><p className="text-red-500">{error}</p></AdminPageContainer>;
+  }
 
   return (
     <AdminPageContainer>
@@ -34,11 +93,13 @@ export default function AdminPets() {
             </tr>
           </thead>
           <tbody>
-            {samplePets.map(pet => (
+            {pets.map(pet => (
               <tr key={pet.id} className="border-b border-accent hover:bg-ivory/50">
                 <td className="p-4 flex items-center gap-4">
-                  <img src={pet.img} alt={pet.name} className="w-12 h-12 rounded-lg object-cover" loading="lazy" />
-                  <span className="font-medium text-text-dark">{pet.name}</span>
+                  <Link to={`${basePath}/pets/view/${pet.id}`} className="flex items-center gap-4">
+                    <img src={pet.imageUrl} alt={pet.name} className="w-12 h-12 rounded-lg object-cover" loading="lazy" />
+                    <span className="font-medium text-text-dark">{pet.name}</span>
+                  </Link>
                 </td>
                 <td className="p-4">{pet.breed}</td>
                 <td className="p-4">
@@ -51,7 +112,9 @@ export default function AdminPets() {
                     <Link to={`${basePath}/pets/edit/${pet.id}`} className="text-blue-500 hover:text-blue-700">
                       <BsPencilSquare size={16} />
                     </Link>
-                    <button className="text-red-500 hover:text-red-700"><BsTrash size={16} /></button>
+                    <button onClick={() => handleDelete(pet.id)} className="text-red-500 hover:text-red-700">
+                      <BsTrash size={16} />
+                    </button>
                   </div>
                 </td>
               </tr>
