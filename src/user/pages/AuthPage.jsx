@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc"; // Google Icon
 import { FaApple } from "react-icons/fa"; // Optional other logins
-import axios from "axios";
+import { useUser } from "../../context/UserContext";
+import apiClient from "../../api/apiClient";
 
-const API_URL = "http://localhost:2025";
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const { login } = useUser();
 
   // State for form inputs
   const [firstName, setFirstName] = useState("");
@@ -28,15 +30,15 @@ export default function AuthPage() {
     setLoading(true);
 
     const url = isLogin 
-      ? `${API_URL}/api/auth/login` 
-      : `${API_URL}/api/auth/register`;
+      ? `/api/auth/login` 
+      : `/api/auth/register`;
 
     const payload = isLogin
       ? { email: email, password: password } // Backend expects 'email' for login
       : { firstName: firstName, lastName: lastName, email: email, password: password };
 
     try {
-      const response = await axios.post(url, payload);
+      const response = await apiClient.post(url, payload);
       
       // console.log("Success:", response.data);
 
@@ -46,8 +48,8 @@ export default function AuthPage() {
         localStorage.setItem("authToken", token); // Save token to local storage
         // console.log(response);
         
-        // Redirect user to the dashboard or home page
-        // window.location.href = '/dashboard'; 
+        await login(token);
+
         navigate("/");
       } else {
         // On successful registration, switch to the login tab

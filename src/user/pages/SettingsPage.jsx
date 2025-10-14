@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PageContainer from '../../components/PageContainer';
 import PasswordChangeModal from '../components/PasswordChangeModel';
+import { useUser } from '../../context/UserContext';
+import apiClient from '../../api/apiClient';
 
 // A reusable Toggle Switch component
 const ToggleSwitch = ({ label, enabled, onChange }) => (
@@ -16,30 +18,61 @@ const ToggleSwitch = ({ label, enabled, onChange }) => (
 );
 
 export default function SettingsPage() {
+  const { user, logout, setUser } = useUser();
+  
   const [settings, setSettings] = useState({
     emailPromotions: true,
     emailOrderUpdates: true,
-    smsNotifications: false,
+    emailPetUpdates: false,
   });
   
   // State to control the password modal visibility
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+      if (user) {
+          setSettings({
+              emailPromotions: user.emailPromotions,
+              emailOrderUpdates: user.emailOrderUpdates,
+              emailPetUpdates: user.emailPetUpdates,
+          });
+      }
+  }, [user]);
 
   const handleToggle = (key) => {
-    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+      setSettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
   
-  const handleSaveChanges = () => {
-    console.log("Saving settings:", settings);
-    alert("Settings saved successfully!");
+  const handleSaveChanges = async () => {
+      setIsSaving(true);
+      try {
+          await apiClient.put('/api/profile/settings', settings);
+          // Also update the global user context with the new settings
+          setUser(prevUser => ({ ...prevUser, ...settings }));
+          alert("Settings saved successfully!");
+      } catch (error) {
+          alert("Failed to save settings. Please try again.");
+          console.error(error);
+      } finally {
+          setIsSaving(false);
+      }
   };
 
-  const handleDeleteAccount = () => {
-    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-        console.log("Deleting account...");
-        alert("Account deleted.");
-    }
+  const handleDeleteAccount = async () => {
+      if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+          try {
+              await apiClient.delete('/api/profile/me');
+              alert("Account deleted successfully.");
+              logout(); // Log the user out after deleting their account
+          } catch (error) {
+              alert("Failed to delete account. Please try again.");
+              console.error(error);
+          }
+      }
   };
+
+  if (!user) return <PageContainer><p>Loading...</p></PageContainer>;
 
   return (
     <>
@@ -63,9 +96,9 @@ export default function SettingsPage() {
                           onChange={() => handleToggle('emailOrderUpdates')}
                       />
                       <ToggleSwitch 
-                          label="SMS notifications" 
-                          enabled={settings.smsNotifications}
-                          onChange={() => handleToggle('smsNotifications')}
+                          label="Email about pet updates" 
+                          enabled={settings.emailPetUpdates}
+                          onChange={() => handleToggle('emailPetUpdates')}
                       />
                   </div>
               </div>
@@ -89,7 +122,7 @@ export default function SettingsPage() {
                       onClick={handleSaveChanges} 
                       className="bg-primary text-white font-semibold px-6 py-2 rounded-lg hover:bg-secondary transition-colors"
                   >
-                      Save Changes
+                    {isSaving ? 'Saving...' : 'Save Changes'}                  
                   </button>
               </div>
           </div>

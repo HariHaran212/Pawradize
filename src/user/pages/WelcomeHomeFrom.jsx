@@ -1,27 +1,59 @@
-import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import PageContainer from "../../components/PageContainer";
+import { useUser } from "../../context/UserContext";
+import apiClient from "../../api/apiClient";
 
 export default function WelcomeHomeForm() {
-	const petId = useParams().id;
+	const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useUser();
 
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
-    petPreference: "",
     address: "",
     reason: "",
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                fullName: user.name || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                address: user.address || '',
+            }));
+        }
+    }, [user]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form Submitted:", formData);
-    alert("Application submitted! We’ll contact you soon.");
+  const handleSubmit = async (e) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      setError('');
+
+      try {
+          await apiClient.post('/api/visit-requests', {
+              petId: id,
+              ...formData,
+          });
+          alert("Application submitted! We'll contact you soon.");
+          navigate(`/pet/${id}`); // Navigate back to the pet's detail page
+      } catch (err) {
+          setError(err?.response?.data?.message || 'Failed to submit application. Please try again.');
+          console.error(err);
+      } finally {
+          setIsSubmitting(false);
+      }
   };
 
   return (
@@ -44,7 +76,7 @@ export default function WelcomeHomeForm() {
             <input
 							type="text"
 							name="pet-id"
-							value={petId}
+							value={id}
 							className="w-full px-4 py-2 border border-accent rounded-lg bg-gray-100 cursor-not-allowed no-focus"
 							readOnly
 							tabIndex={-1}
@@ -125,12 +157,15 @@ export default function WelcomeHomeForm() {
             />
           </div>
 
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
           {/* Submit */}
           <button
             type="submit"
+            disabled={isSubmitting}
             className="w-full bg-primary text-white font-semibold py-3 rounded-lg hover:bg-secondary transition"
           >
-            Submit Application
+            {isSubmitting ? 'Submitting...' : 'Submit Application'}
           </button>
         </form>
       </div>

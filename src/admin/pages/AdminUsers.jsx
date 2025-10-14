@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { BsPencilSquare, BsTrash } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
+import apiClient from '../../api/apiClient';
+import { useDebounce } from '../../hooks/useDebounce';
+import PaginationControls from '../components/PaginationControls';
+
+const allRoles = ['USER', 'STORE_MANAGER', 'ADOPTION_COORDINATOR', 'SUPER_ADMIN'];
+
 
 const sampleUsers = [
   { id: 1, avatar: 'https://via.placeholder.com/100', name: 'Admin John', email: 'john.admin@pawradise.com', role: 'Super Admin', joinedDate: '2025-01-15' },
@@ -9,11 +15,9 @@ const sampleUsers = [
   { id: 4, avatar: 'https://via.placeholder.com/100', name: 'User Anjali', email: 'anjali.m@example.com', role: 'User', joinedDate: '2025-09-25' },
 ];
 
-const allRoles = ['User', 'Store Manager', 'Adoption Coordinator', 'Super Admin'];
-
 // --- Modal Component for Editing Roles ---
 const RoleEditModal = ({ user, isOpen, onClose, onSave }) => {
-    const [selectedRole, setSelectedRole] = useState(user?.role || 'User');
+    const [selectedRole, setSelectedRole] = useState(user?.role || 'USER');
 
     useEffect(() => {
         if (user) {
@@ -52,26 +56,47 @@ const RoleEditModal = ({ user, isOpen, onClose, onSave }) => {
 };
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState(sampleUsers);
-  const [filteredUsers, setFilteredUsers] = useState(sampleUsers);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Filters and Pagination
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
   
-  // State for the modal
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
+  // Fetch data from backend
   useEffect(() => {
-    let result = users.filter(user =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    if (roleFilter !== 'All') {
-      result = result.filter(user => user.role === roleFilter);
-    }
-    setFilteredUsers(result);
-  }, [searchTerm, roleFilter, users]);
+      const fetchUsers = async () => {
+          setLoading(true);
+          try {
+              const params = new URLSearchParams({ page: currentPage - 1, size: 10 });
+              if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
+              if (roleFilter !== 'All') params.append('role', roleFilter);
+              
+              const response = await apiClient.get('/api/admin/users', { params });
+              setUsers(response.data.data.content);
+              setTotalPages(response.data.data.totalPages);
+          } catch (err) {
+              setError('Failed to fetch users.');
+          } finally {
+              setLoading(false);
+          }
+      };
+      fetchUsers();
+  }, [debouncedSearchTerm, roleFilter, currentPage]);
 
+  // Reset page when filters change
+  useEffect(() => setCurrentPage(1), [debouncedSearchTerm, roleFilter]);
+
+  
   const handleOpenModal = (user) => {
     setEditingUser(user);
     setIsModalOpen(true);
@@ -82,12 +107,31 @@ export default function AdminUsers() {
     setEditingUser(null);
   };
 
-  const handleRoleSave = (userId, newRole) => {
-    // In a real app, you would make an API call here
-    setUsers(users.map(user => user.id === userId ? { ...user, role: newRole } : user));
-    alert(`User role updated to ${newRole}`);
-    handleCloseModal();
+  const handleRoleSave = async (userId, newRole) => {
+      try {
+          const response = await apiClient.patch(`/api/admin/users/${userId}/role`, null, { params: { newRole } });
+          // Update user in the local state
+          setUsers(users.map(user => user.id === userId ? response.data.data : user));
+          handleCloseModal();
+      } catch (err) {
+          alert(err?.response?.data?.message || 'Failed to update role.');
+      }
   };
+
+  const handleDeleteUser = async (userId) => {
+      if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+          try {
+              await apiClient.delete(`/api/admin/users/${userId}`);
+              // Remove user from local state
+              setUsers(users.filter(user => user.id !== userId));
+          } catch (err) {
+              alert('Failed to delete user.');
+          }
+      }
+  };
+
+  if (loading && users.length === 0) return <AdminPageContainer>Loading users...</AdminPageContainer>;
+  if (error) return <AdminPageContainer>{error}</AdminPageContainer>;
 
   return (
     <>
@@ -130,21 +174,21 @@ export default function AdminUsers() {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map(user => (
+              {users.map(user => (
                 <tr key={user.id} className="border-b border-accent hover:bg-ivory/50">
                   <td className="p-4 flex items-center gap-4">
-                    <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" loading="lazy" />
+                    <img src={user.avatarUrl  || `https://placehold.co/100?text=${user.name.charAt(0)}`} alt={user.name} className="w-10 h-10 rounded-full object-cover" loading="lazy" />
                     <span className="font-medium text-text-dark">{user.name}</span>
                   </td>
                   <td className="p-4">{user.email}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'Super Admin' ? 'bg-primary/20 text-primary' : 'bg-gray-200 text-gray-700'}`}>{user.role}</span>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'SUPER_ADMIN' ? 'bg-primary/20 text-primary' : 'bg-gray-200 text-gray-700'}`}>{user.role}</span>
                   </td>
                   <td className="p-4">{user.joinedDate}</td>
                   <td className="p-4">
                     <div className="flex gap-4">
                       <button onClick={() => handleOpenModal(user)} className="text-blue-500 hover:text-blue-700" title="Edit Role"><BsPencilSquare size={16} /></button>
-                      <button className="text-red-500 hover:text-red-700" title="Delete User"><BsTrash size={16} /></button>
+                      <button onClick={() => handleDeleteUser(user.id)} className="text-red-500 hover:text-red-700" title="Delete User"><BsTrash size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -152,6 +196,11 @@ export default function AdminUsers() {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+        />
       </AdminPageContainer>
     </>
   );

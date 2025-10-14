@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { BsBook, BsPinMapFill } from 'react-icons/bs'; // Removed BsWhistle
 import { FaLeaf, FaChevronDown, FaBullhorn } from 'react-icons/fa'; // Replaced FaWhistle with FaBullhorn
 import PageContainer from '../../components/PageContainer';
+import PetCareGuides from '../components/PetCareGuides';
 const resources = [
   {
     id: 1,
@@ -54,15 +55,9 @@ export default function PetCareResources() {
       </div>
 
       {/* --- Featured Guide Section --- */}
-      <div className="bg-white p-8 rounded-2xl shadow-lg shadow-grey mb-12">
-          <h2 className="text-2xl font-bold mb-3">Featured Guide: Bringing a New Puppy Home</h2>
-          <p className="text-text-medium">
-            The first few days with your new puppy are crucial for setting a foundation of trust and good behavior. Our guide provides a complete checklist for puppy-proofing your home, essentials you'll need to buy, and a schedule for the first 24 hours to ensure a smooth, happy transition for everyone.
-          </p>
-          <a href="guides" className="font-semibold text-secondary hover:underline mt-4 inline-block">
-            Read the Full Guide →
-          </a>
-      </div>
+      <PetCareGuides />
+
+      <h2 className="text-2xl md:text-3xl font-bold text-primary mt-16 mb-8 text-center">Additional Resources</h2>
 
 
       {/* --- Interactive Accordion Section --- */}

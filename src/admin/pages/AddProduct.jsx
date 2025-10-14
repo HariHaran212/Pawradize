@@ -4,9 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BsUpload } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import { useRole } from '../../context/RoleContext';
-import axios from 'axios';
-
-const API_URL = "http://localhost:2025";
+import apiClient from '../../api/apiClient';
 
 export default function AddProduct() {
   const { basePath } = useRole();
@@ -20,10 +18,11 @@ export default function AddProduct() {
     stockQuantity: 0,
     category: 'Food',
     brand: '',
-    imageFile: null,
+    featuredSpecies: [],
   });
 
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -35,9 +34,24 @@ export default function AddProduct() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setProductData(prev => ({ ...prev, imageFile: file })); // FIX: Store the actual file object
+      setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleSpeciesChange = (e) => {
+    const { value, checked } = e.target;
+    setProductData(prev => {
+        // Get the current list of species
+        const currentSpecies = prev.featuredSpecies;
+        if (checked) {
+            // If checked, add the new species to the list
+            return { ...prev, featuredSpecies: [...currentSpecies, value] };
+        } else {
+            // If unchecked, remove the species from the list
+            return { ...prev, featuredSpecies: currentSpecies.filter(s => s !== value) };
+        }
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -47,23 +61,16 @@ export default function AddProduct() {
 
     // 1. Create FormData to send multipart data (text + file)
     const formData = new FormData();
-    formData.append('sku', productData.sku);
-    formData.append('name', productData.name);
-    formData.append('description', productData.description);
-    formData.append('price', productData.price);
-    formData.append('stockQuantity', productData.stockQuantity);
-    formData.append('category', productData.category);
-    formData.append('brand', productData.brand);
-    formData.append('imageFile', productData.imageFile);
+    formData.append('productData', new Blob([JSON.stringify(productData)], { type: "application/json" }));
+
+    if (imageFile) {
+      formData.append('imageFile', imageFile);
+    }
 
     try {
-      const token = localStorage.getItem("authToken");
-      console.log(token)
-      // 2. POST the FormData to your backend
-      await axios.post(`${API_URL}/api/products`, formData, {
+      await apiClient.post(`/api/products`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}` // Assuming this is a protected route
+          'Content-Type': 'multipart/form-data'
         }
       });
       
@@ -78,6 +85,8 @@ export default function AddProduct() {
     }
   };
 
+  const speciesOptions = ['Dog', 'Cat', 'Bird', 'Rabbit', 'Fish', 'Other'];
+
   return (
     <AdminPageContainer>
       <div className="p-6">
@@ -86,7 +95,7 @@ export default function AddProduct() {
           {/* Left Column: Product Details */}
           <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-md space-y-4">
             <div>
-              <label className="block text-sm font-semibold mb-2">SKU</label>
+              <label className="block text-sm font-semibold mb-2">SKU (Product ID)</label>
               <input type="text" name="sku" value={productData.sku} onChange={handleInputChange} className="w-full border border-accent rounded-md p-2" required/>
             </div>
             <div>
@@ -120,6 +129,23 @@ export default function AddProduct() {
                     <option>Accessories</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">For Pet Type(s)</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                    {speciesOptions.map(species => (
+                        <label key={species} className="flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                value={species}
+                                checked={productData.featuredSpecies.includes(species)}
+                                onChange={handleSpeciesChange}
+                                className="rounded text-primary focus:ring-primary"
+                            />
+                            {species}
+                        </label>
+                    ))}
+                </div>
+              </div>
               {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           </div>
           {/* Right Column: Image & Actions */}
@@ -137,19 +163,25 @@ export default function AddProduct() {
                     )}
                 </div>
                 <label className="mt-4 w-full flex items-center justify-center px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg shadow hover:bg-secondary transition cursor-pointer">
-                Upload New Picture
-                <input 
-                    type="file" 
-                    onChange={handleFileChange} 
-                    accept="image/*" 
-                    className="hidden"
-                />
+                  Upload New Picture
+                  <input 
+                      type="file" 
+                      onChange={handleFileChange} 
+                      accept="image/*" 
+                      className="hidden"
+                  />
                 </label>
               </div>
               <div className="bg-white p-6 rounded-2xl shadow-md">
                  <h3 className="text-lg font-semibold text-text-dark mb-4">Actions</h3>
                  <div className="flex flex-col gap-3">
-                    <button type="submit" className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-secondary transition-colors">Save Product</button>
+                    <button 
+                      type="submit" 
+                      className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-secondary transition-colors"
+                      disabled={loading}
+                    >
+                      {loading ? "Saving..." : "Save Product"}
+                    </button>
                     <Link to={`${basePath}/products`} className="w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-300 transition-colors text-center">Cancel</Link>
                  </div>
               </div>

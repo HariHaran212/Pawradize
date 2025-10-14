@@ -15,4 +15,26 @@ apiClient.interceptors.request.use(config => {
     return Promise.reject(error);
 });
 
+
+// Handle global errors, like 401 Unauthorized for expired tokens
+apiClient.interceptors.response.use(
+    (response) => {
+        // If the request was successful, just return the response
+        return response;
+    },
+    (error) => {
+        // Check if the error is a 401 Unauthorized
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+            console.log("Unauthorized request. Token might be expired. Logging out.");
+            // Remove the expired token
+            localStorage.removeItem('authToken');
+            // Redirect to the login page
+            window.location.href = '/login'; 
+        }
+
+        // For all other errors, just pass them along
+        return Promise.reject(error);
+    }
+);
+
 export default apiClient;

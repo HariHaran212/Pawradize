@@ -11,7 +11,7 @@ const samplePets = [
 
 export default function Home() {
   const token = localStorage.getItem("authToken");
-  console.log("Auth Token:", token); // For debugging purposes
+  // console.log("Auth Token:", token); // For debugging purposes
   return (
     <div className="w-full bg-white text-gray-800">
       {/* Hero Section with Video */}

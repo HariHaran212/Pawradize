@@ -4,9 +4,7 @@ import AdminPageContainer from '../components/AdminPageContainer';
 import { Link } from 'react-router-dom';
 import { useRole } from '../../context/RoleContext';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = "http://localhost:2025";
+import apiClient from '../../api/apiClient';
 
 const samplePets = [
     { id: 11, img: "/assets/Dog-1.jpg", name: "Buddy", breed: "Golden Retriever Mix", status: "Available" },
@@ -23,12 +21,7 @@ export default function AdminPets() {  const { basePath } = useRole();
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await axios.get(`${API_URL}/api/pets`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await apiClient.get(`/api/pets`);
         setPets(response.data.data);
       } catch (err) {
         setError('Could not fetch pet data. Please try again later.');
@@ -47,12 +40,7 @@ export default function AdminPets() {  const { basePath } = useRole();
       setLoading(true);
       
       try {
-        const token = localStorage.getItem("authToken");
-        await axios.delete(`${API_URL}/api/pets/${petId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        await apiClient.delete(`/api/pets/${petId}`);
         // Remove the deleted pet from the state to update the UI instantly
         setPets(currentPets => currentPets.filter(pet => pet.id !== petId));
       } catch (err) {

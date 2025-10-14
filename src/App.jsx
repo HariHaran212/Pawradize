@@ -22,12 +22,10 @@ import ForgotPassword from "./user/pages/ForgotPassword";
 import ProductDetailPage from "./user/pages/ProductDetailPage";
 import PetDetailPage from "./user/pages/PetDetailPage";
 import CheckoutPage from "./user/pages/CheckoutPage";
-import OrdersPage from "./user/pages/OrdersPage";
 import SettingsPage from "./user/pages/SettingsPage";
 
 // Admin Pages
 import AdminDashboard from "./admin/pages/AdminDashboard";
-import AdminRoute from "./components/AdminRoute";
 import AdminNotFound from "./admin/pages/AdminNotFound";
 import AdminProducts from "./admin/pages/AdminProducts";
 import AdminOrders from "./admin/pages/AdminOrders";
@@ -42,7 +40,6 @@ import AdminProfile from "./admin/pages/AdminProfile";
 import FavoritesPage from "./user/pages/FavouritesPage";
 import WelcomeHomeForm from "./user/pages/WelcomeHomeFrom";
 import FullGuidePage from "./user/pages/FullGuidePage";
-import PetGuidesHub from "./user/pages/PetGuideHub";
 import HealthPage from "./user/pages/HealthPage";
 import EventsPage from "./user/pages/EventsPage";
 import GroomingPage from "./user/pages/GroomingPage";
@@ -58,7 +55,13 @@ import AdoptionCoordinatorLayout from "./layouts/AdoptionCoordinatorLayout";
 import AdminGuideEditor from "./admin/pages/AdminGuideEditor";
 import AdminContentPage from "./admin/pages/AdminContentPage";
 import ViewPet from "./admin/pages/ViewPet";
-// Import other admin pages like AdminOrders, AdminProducts, etc. here
+import OrderDetailPage from "./user/pages/OrderDetailsPage";
+import OrderHistoryPage from "./user/pages/OrderHistoryPage";
+import OrderConfirmationPage from "./user/pages/OrderConfirmationPage";
+import OAuth2RedirectHandler from "./components/OAuth2RedirectHandler";
+import PublicRoute from "./components/PublicRoute";
+import MyAdoptionRequests from "./user/pages/MyAdoptionRequests";
+import AdminContactMessages from "./admin/pages/AdminContactMessages";
 
 function App() {
   return (
@@ -69,7 +72,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route element={<RoleBasedRoute allowedRoles={['Super Admin']} />}>
           <Route index element={<AdminDashboard />} />
-          <Route path="profile" element={<AdminProfile />} />
+          <Route path="profile" element={<UserProfile />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="orders/:id" element={<ViewOrders />} />
@@ -87,6 +90,7 @@ function App() {
           <Route path="guides/edit/:id" element={<AdminGuideEditor />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="visit-requests" element={<VisitRequests />} />
+          <Route path="messages" element={<AdminContactMessages />} />
           <Route path="*" element={<AdminNotFound />} />
         </Route>
       </Route>
@@ -125,15 +129,18 @@ function App() {
       {/* ===== USER ROUTES ===== */}
       <Route path="/" element={<UserLayout />}>
         <Route index element={<Home />} />
-        <Route path="login" element={<AuthPage />} />
-        <Route path="forgot-password" element={<ForgotPassword />} />
+        
+        <Route element={<PublicRoute />}>
+          <Route path="login" element={<AuthPage />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+        </Route>
+        <Route path="oauth2/redirect" element={<OAuth2RedirectHandler />} />
         <Route path="find-a-friend" element={<FindFriendPage />} />
         <Route path="pet/:id" element={<PetDetailPage />} />
         <Route path="pet/welcome-home/:id" element={<WelcomeHomeForm />} />
         <Route path="shop" element={<ShopPage />} />
         <Route path="product/:id" element={<ProductDetailPage />} />
         <Route path="pet-care-resources" element={<PetCareResources />} />
-        <Route path="guides" element={<PetGuidesHub />} />
         <Route path="guides/:slug" element={<FullGuidePage />} />
         <Route path="about" element={<About />} />
         <Route path="grooming" element={<GroomingPage />} />
@@ -144,10 +151,14 @@ function App() {
         {/* Protected routes for logged-in users */}
         <Route element={<ProtectedRoute />}>
           <Route path="account" element={<UserProfile />} />
+          <Route path="/my-requests" element={<MyAdoptionRequests />} /> 
           <Route path="favorites" element={<FavoritesPage />} />
           <Route path="cart" element={<Cart />} />
           <Route path="checkout" element={<CheckoutPage />} />
-          <Route path="orders" element={<OrdersPage />} />
+          {/* <Route path="orders" element={<OrdersPage />} /> */}
+          <Route path="/orders" element={<OrderHistoryPage />} />
+          <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path="unauthorized" element={<UnauthorizedPage />} />

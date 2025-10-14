@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BsUpload } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import { useRole } from '../../context/RoleContext';
-import axios from 'axios';
+import apiClient from '../../api/apiClient';
 
 const API_URL = "http://localhost:2025";
 
@@ -23,7 +23,7 @@ export default function AddPet() {
     shortDescription: '',
     longDescription: '',
     price: 0,
-    status: 'Available',
+    status: 'AVAILABLE',
     personalityTraits: [],
   });
 
@@ -75,10 +75,9 @@ export default function AddPet() {
       // Replace with your actual API endpoint
       const token = localStorage.getItem("authToken");
       
-      await axios.post(`${API_URL}/api/pets`, formData, {
+      await apiClient.post(`/api/pets`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'multipart/form-data'
         },
       });
 
@@ -168,11 +167,16 @@ export default function AddPet() {
              <h3 className="text-lg font-semibold text-text-dark mb-4">Status & Actions</h3>
              
              <label className="block text-sm font-semibold mb-2">Status</label>
-             <select name="status" onChange={handleInputChange} className="w-full bg-white border border-accent rounded-md p-2 mb-4">
-              <option>Available</option>
-              <option>Pending</option>
-              <option>Adopted</option>
-            </select>
+             <select 
+              name="status" 
+              value={petData.status || 'AVAILABLE'}
+              onChange={handleInputChange} 
+              className="w-full bg-white border border-accent rounded-md p-2 mb-4"
+            >
+              <option value="AVAILABLE">Available</option>
+              <option value="ADOPTED">Adopted</option>
+              <option value="NOT_AVAILABLE">Not Available</option>
+             </select>
 
              <div className="flex flex-col gap-3">
                 <button type="submit" className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-secondary">

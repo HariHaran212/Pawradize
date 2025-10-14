@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import apiClient from '../../api/apiClient';
 
 const PasswordChangeModal = ({ isOpen, onClose }) => {
     const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false); // Add loading state
 
     if (!isOpen) return null;
 
@@ -11,10 +13,18 @@ const PasswordChangeModal = ({ isOpen, onClose }) => {
         setPasswordData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleClose = () => {
+        // Reset state when closing the modal
+        setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        setError('');
+        onClose();
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
+        // Client-side validation
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             setError('New passwords do not match.');
             return;
@@ -24,9 +34,24 @@ const PasswordChangeModal = ({ isOpen, onClose }) => {
             return;
         }
 
-        console.log("Submitting new password data:", passwordData);
-        alert("Password changed successfully!");
-        onClose();
+        setIsSubmitting(true);
+        try {
+            // Make the API call to the backend
+            await apiClient.post('/api/profile/change-password', {
+                oldPassword: passwordData.oldPassword,
+                newPassword: passwordData.newPassword,
+            });
+
+            alert("Password changed successfully!");
+            handleClose(); // Close and reset the modal on success
+
+        } catch (err) {
+            // Display the specific error message from the backend
+            const errorMessage = err.response?.data?.message || "An unexpected error occurred.";
+            setError(errorMessage);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -50,11 +75,11 @@ const PasswordChangeModal = ({ isOpen, onClose }) => {
                     {error && <p className="text-sm text-red-500">{error}</p>}
                     
                     <div className="flex gap-4 pt-4">
-                        <button type="button" onClick={onClose} className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-300 transition">
+                        <button type="button" onClick={handleClose} className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-300 transition">
                             Cancel
                         </button>
-                        <button type="submit" className="w-full bg-primary text-white py-2 px-4 rounded-lg font-semibold hover:bg-secondary transition">
-                            Save Password
+                        <button type="submit" className="w-full bg-primary text-white py-2 px-4 rounded-lg font-semibold hover:bg-secondary transition" disabled={isSubmitting}>
+                            {isSubmitting ? 'Saving...' : 'Save Password'}
                         </button>
                     </div>
                 </form>

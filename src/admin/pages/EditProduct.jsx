@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BsUpload } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
-import axios from 'axios';
 import { useRole } from '../../context/RoleContext';
 import apiClient from '../../api/apiClient';
-
-const API_URL = "http://localhost:2025";
 
 export default function EditProduct() {
   const { id } = useParams(); // Get product ID from URL
@@ -20,6 +17,7 @@ export default function EditProduct() {
     stockQuantity: 0,
     category: '',
     brand: '',
+    featuredSpecies: [],
   });
   const [sku, setSku] = useState('');
 
@@ -32,10 +30,7 @@ export default function EditProduct() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await axios.get(`${API_URL}/api/products/${id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const response = await apiClient.get(`/api/products/${id}`);
         const product = response.data.data;
 
         // Populate form with fetched data
@@ -43,9 +38,10 @@ export default function EditProduct() {
             name: product.name,
             description: product.description,
             price: product.price,
-            stockQuantity: Number(product.stockQuantity),
+            stockQuantity: product.stockQuantity,
             category: product.category,
             brand: product.brand,
+            featuredSpecies: product.featuredSpecies || [],
         });
 
         setSku(product.sku); // SKU is not editable
@@ -67,6 +63,22 @@ export default function EditProduct() {
       setImageFile(file); // Store the actual file object
       setImagePreview(URL.createObjectURL(file)); // Update the preview
     }
+  };
+
+  
+  const handleSpeciesChange = (e) => {
+    const { value, checked } = e.target;
+    setProductData(prev => {
+        // Get the current list of species
+        const currentSpecies = prev.featuredSpecies;
+        if (checked) {
+            // If checked, add the new species to the list
+            return { ...prev, featuredSpecies: [...currentSpecies, value] };
+        } else {
+            // If unchecked, remove the species from the list
+            return { ...prev, featuredSpecies: currentSpecies.filter(s => s !== value) };
+        }
+    });
   };
   
   // --- CHANGE: Implement submission to the backend ---
@@ -96,6 +108,8 @@ export default function EditProduct() {
       setLoading(false);
     }
   };
+  
+  const speciesOptions = ['Dog', 'Cat', 'Bird', 'Rabbit', 'Fish', 'Other'];
 
   return (
     <AdminPageContainer>
@@ -106,7 +120,7 @@ export default function EditProduct() {
           {/* Left Column */}
           <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-md space-y-4">
             <div>
-              <label className="block text-sm font-semibold mb-2">SKU</label>
+              <label className="block text-sm font-semibold mb-2">SKU (Product ID)</label>
               <input type="text" name="sku" value={sku} onChange={handleInputChange} className="w-full border border-accent rounded-md p-2" disabled/>
             </div>
              <div>
@@ -128,7 +142,7 @@ export default function EditProduct() {
               </div>
                <div>
                 <label className="block text-sm font-semibold mb-2">Stock Quantity</label>
-                <input type="number" name="stock" value={productData.stockQuantity} onChange={handleInputChange} className="w-full border border-accent rounded-md p-2" required/>
+                <input type="number" name="stockQuantity" value={productData.stockQuantity} onChange={handleInputChange} className="w-full border border-accent rounded-md p-2" required/>
               </div>
             </div>
              <div>
@@ -140,6 +154,24 @@ export default function EditProduct() {
                     <option>Accessories</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">For Pet Type(s)</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                    {speciesOptions.map(species => (
+                        <label key={species} className="flex items-center gap-2 text-sm">
+                            <input
+                                type="checkbox"
+                                value={species}
+                                checked={productData.featuredSpecies.includes(species)}
+                                onChange={handleSpeciesChange}
+                                className="rounded text-primary focus:ring-primary"
+                            />
+                            {species}
+                        </label>
+                    ))}
+                </div>
+              </div>
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           </div>
           {/* Right Column */}
           <div className="lg:col-span-1 space-y-6">
@@ -161,7 +193,13 @@ export default function EditProduct() {
               <div className="bg-white p-6 rounded-2xl shadow-md">
                  <h3 className="text-lg font-semibold text-text-dark mb-4">Actions</h3>
                  <div className="flex flex-col gap-3">
-                    <button type="submit" className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-secondary transition-colors">Update Product</button>
+                    <button 
+                      type="submit" 
+                      className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-secondary transition-colors"
+                      disabled={loading}
+                    >
+                      {loading ? "Saving..." : "Update Product"}
+                    </button>
                     <Link to="/admin/products" className="w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-300 transition-colors text-center">Cancel</Link>
                  </div>
               </div>

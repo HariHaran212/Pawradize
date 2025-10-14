@@ -3,11 +3,8 @@ import AdoptionCoordinatorLayout from '../../layouts/AdoptionCoordinatorLayout';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BsUpload } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
-import axios from 'axios';
 import { useRole } from '../../context/RoleContext';
 import apiClient from '../../api/apiClient';
-
-const API_URL = "http://localhost:2025";
 
 const samplePets = [ 
     { id: 11, name: "Buddy", type: "Dog", breed: "Golden Retriever Mix", age: "2 yrs", gender: "Male", shortDescription: 'Playful, vaccinated.', longDescription: 'Buddy loves walks and is great with kids.', status: "Available", goodWith: ["Good with Children", "Good with Other Dogs"], img: "/assets/Dog-1.jpg" },
@@ -22,7 +19,7 @@ const initialPetState = {
     dateOfBirth: '',
     shortDescription: '',
     longDescription: '',
-    status: 'Available',
+    status: 'AVAILABLE',
     personalityTraits: [],
     price: 0,
 };
@@ -50,6 +47,8 @@ export default function EditPet() {
         setPetData({
             ...initialPetState, // Ensures all fields are present
             ...fetchedPet,
+            status: fetchedPet.status || 'AVAILABLE',
+            personalityTraits: fetchedPet.personalityTraits || [], 
             dateOfBirth: fetchedPet.dateOfBirth || '',
         });
         setImagePreview(fetchedPet.imageUrl);
@@ -113,9 +112,9 @@ export default function EditPet() {
       }
   };
 
-  if (loading && !petData) return <AdminPageContainer><p>Loading pet data...</p></AdminPageContainer>;
-  if (error) return <AdminPageContainer><p className="text-red-500">{error}</p></AdminPageContainer>;
-  if (!petData) return <AdminPageContainer><p>Pet not found.</p></AdminPageContainer>;
+  // if (loading && !petData) return <AdminPageContainer><p>Loading pet data...</p></AdminPageContainer>;
+  // if (error) return <AdminPageContainer><p className="text-red-500">{error}</p></AdminPageContainer>;
+  // if (!petData) return <AdminPageContainer><p>Pet not found.</p></AdminPageContainer>;
 
 
   return (
@@ -202,7 +201,16 @@ export default function EditPet() {
           <div className="bg-white p-6 rounded-2xl shadow-md">
              <h3 className="text-lg font-semibold text-text-dark mb-4">Status & Actions</h3>
              <label className="block text-sm font-semibold mb-2">Status</label>
-             <select name="status" value={petData.status} onChange={handleInputChange} className="w-full bg-white border border-accent rounded-md p-2 mb-4"><option>Available</option><option>Pending</option><option>Adopted</option></select>
+             <select 
+              name="status" 
+              value={petData.status || 'AVAILABLE'}
+              onChange={handleInputChange} 
+              className="w-full bg-white border border-accent rounded-md p-2 mb-4"
+            >
+              <option value="AVAILABLE">Available</option>
+              <option value="ADOPTED">Adopted</option>
+              <option value="NOT_AVAILABLE">Not Available</option>
+             </select>
              <div className="flex flex-col gap-3">
                 <button type="submit" className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-secondary">Update Pet</button>
                 <Link to="/adoption/pets" className="w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-300 text-center">Cancel</Link>

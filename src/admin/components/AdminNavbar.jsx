@@ -1,22 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { HiMenu, HiX, HiOutlineUserCircle, HiOutlineCog, HiOutlineLogout } from 'react-icons/hi';
+import { HiMenu, HiX, HiOutlineUserCircle, HiOutlineCog, HiOutlineLogout, HiOutlineMail } from 'react-icons/hi';
 import { FaPaw } from 'react-icons/fa';
+import { ChevronDown } from 'lucide-react';
+import { useUser } from '../../context/UserContext';
 
 export default function AdminNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [dropdownOpen, setIsProfileOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const { user, logout } = useUser();
 
   
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsProfileOpen(false);
+        setDropdownOpen(false);
       }
     };
 
-    const handleScroll = () => setIsProfileOpen(false);
+    const handleScroll = () => setDropdownOpen(false);
 
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("scroll", handleScroll);
@@ -44,6 +47,11 @@ export default function AdminNavbar() {
     fontWeight: '600',
   };
 
+  const handleLogout = () => {
+    setDropdownOpen(false);
+    logout();
+  };
+
   return (
     <header className="bg-ivory/70 backdrop-blur-md shadow-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-6">
@@ -59,7 +67,7 @@ export default function AdminNavbar() {
             >
               <FaPaw className="text-primary text-2xl" />
               <span>
-                Pawradise <span className="font-normal text-text-medium">Admin</span>
+                Pawradize <span className="font-normal text-text-medium">Admin</span>
               </span>
             </Link>
 
@@ -80,9 +88,19 @@ export default function AdminNavbar() {
           {/* Right Side: Profile Dropdown */}
           <div className="flex items-center gap-4">
             <div className="relative" ref={dropdownRef}>
-              <button onClick={() => setIsProfileOpen(!dropdownOpen)} className="flex items-center gap-2">
-                <img src="https://via.placeholder.com/100" alt="Admin Avatar" className="w-8 h-8 rounded-full" />
-                <span className="hidden sm:block text-sm font-medium text-text-dark">John Doe</span>
+              <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center gap-2">
+                <img 
+                  src={user.avatarUrl || `https://placehold.co/100?text=${user.name.charAt(0)}`}
+                  alt="Admin Avatar" 
+                  className="w-10 h-10 rounded-full" 
+                  />
+                <span className="hidden sm:block text-sm font-medium text-text-dark">{user.name}</span>
+                
+                <ChevronDown
+                  className={`w-4 h-4 text-gray-600 transition-transform ${
+                    dropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
               {/* Profile Dropdown Menu */}
               {dropdownOpen && (
@@ -93,10 +111,16 @@ export default function AdminNavbar() {
                   <Link to="/admin/settings" className="flex items-center gap-3 px-4 py-2 text-sm text-text-dark hover:bg-ivory">
                     <HiOutlineCog /> Settings
                   </Link>
-                  <hr className="my-2 border-accent" />
-                  <Link to="/login" className="flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50">
-                    <HiOutlineLogout /> Log Out
+                  <Link to="/admin/messages" className="flex items-center gap-3 px-4 py-2 text-sm text-text-dark hover:bg-ivory">
+                    <HiOutlineMail /> Messages
                   </Link>
+                  <hr className="my-2 border-accent" />
+                  <button
+                    onClick={handleLogout} // Use the logout handler
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-500 hover:bg-red-50"
+                  >
+                    <HiOutlineLogout /> Log Out
+                  </button>
                 </div>
               )}
             </div>

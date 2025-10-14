@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import AdminLayout from '../../layouts/AdminLayout';
 import { BsCheckCircle, BsXCircle } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
+import apiClient from '../../api/apiClient';
 
 const sampleVisitRequests = [
     { id: 'VR-001', userName: 'Anjali M.', userContact: 'anjali@example.com', petName: 'Buddy', petType: 'Dog', requestedDate: '2025-10-05', status: 'Pending' },
@@ -11,28 +11,55 @@ const sampleVisitRequests = [
 ];
 
 const statusStyles = {
-    Pending: 'bg-yellow-100 text-yellow-800',
-    Approved: 'bg-blue-100 text-blue-800',
-    Completed: 'bg-green-100 text-green-800',
-    Declined: 'bg-red-100 text-red-800',
+    PENDING: 'bg-yellow-100 text-yellow-800',
+    APPROVED: 'bg-blue-100 text-blue-800',
+    COMPLETED: 'bg-green-100 text-green-800',
+    DECLINED: 'bg-red-100 text-red-800',
 };
 
 export default function VisitRequests() {
-    const [requests, setRequests] = useState(sampleVisitRequests);
-    const [filteredRequests, setFilteredRequests] = useState(sampleVisitRequests);
+    const [requests, setRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
 
     useEffect(() => {
-        if (statusFilter === 'All') {
-            setFilteredRequests(requests);
-        } else {
-            setFilteredRequests(requests.filter(req => req.status === statusFilter));
-        }
-    }, [statusFilter, requests]);
+        const fetchRequests = async () => {
+            setLoading(true);
+            try {
+                const params = new URLSearchParams();
+                if (statusFilter !== 'All') {
+                    params.append('status', statusFilter.toUpperCase());
+                }
+                const response = await apiClient.get('/api/admin/visit-requests', { params });
+                setRequests(response.data.data);
+            } catch (err) {
+                setError(err?.response?.data?.message || 'Failed to load visit requests.');
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRequests();
+    }, [statusFilter]);
 
-    const handleStatusUpdate = (requestId, newStatus) => {
+    const handleStatusUpdate = async (requestId, newStatus) => {
+        const originalRequests = [...requests];
         setRequests(requests.map(req => req.id === requestId ? { ...req, status: newStatus } : req));
+
+        try {
+            await apiClient.patch(`/api/admin/visit-requests/${requestId}/status`, null, {
+                params: { newStatus }
+            });
+        } catch (err) {
+            alert('Failed to update status.');
+            setRequests(originalRequests); // Revert on failure
+        }
     };
+
+    if (loading) return <AdminPageContainer><div>Loading requests...</div></AdminPageContainer>;
+    if (error) return <AdminPageContainer><div>{error}</div></AdminPageContainer>;
+
 
     return (
         <AdminPageContainer>
@@ -45,11 +72,11 @@ export default function VisitRequests() {
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                     >
-                        <option>All</option>
-                        <option>Pending</option>
-                        <option>Approved</option>
-                        <option>Completed</option>
-                        <option>Declined</option>
+                        <option value="All">All</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="DECLINED">Declined</option>
                     </select>
                 </div>
                 
@@ -65,13 +92,13 @@ export default function VisitRequests() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredRequests.map(req => (
+                            {requests.map(req => (
                                 <tr key={req.id} className="border-b border-accent hover:bg-ivory/50">
                                     <td className="p-4">
                                         <p className="font-medium text-text-dark">{req.userName}</p>
                                         <p className="text-xs text-text-medium">{req.userContact}</p>
                                     </td>
-                                    <td className="p-4 font-medium">{req.petName} ({req.petType})</td>
+                                    <td className="p-4 font-medium">{req.petName} ({req.petSpecies})</td>
                                     <td className="p-4">{req.requestedDate}</td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[req.status]}`}>
@@ -79,10 +106,10 @@ export default function VisitRequests() {
                                         </span>
                                     </td>
                                     <td className="p-4">
-                                        {req.status === 'Pending' && (
+                                        {req.status === 'PENDING' && (
                                             <div className="flex gap-2">
-                                                <button onClick={() => handleStatusUpdate(req.id, 'Approved')} className="text-green-500 hover:text-green-700 p-1" title="Approve"><BsCheckCircle size={16} /></button>
-                                                <button onClick={() => handleStatusUpdate(req.id, 'Declined')} className="text-red-500 hover:text-red-700 p-1" title="Decline"><BsXCircle size={16} /></button>
+                                                <button onClick={() => handleStatusUpdate(req.id, 'APPROVED')} className="text-green-500 hover:text-green-700 p-1" title="Approve"><BsCheckCircle size={16} /></button>
+                                                <button onClick={() => handleStatusUpdate(req.id, 'DECLINED')} className="text-red-500 hover:text-red-700 p-1" title="Decline"><BsXCircle size={16} /></button>
                                             </div>
                                         )}
                                     </td>

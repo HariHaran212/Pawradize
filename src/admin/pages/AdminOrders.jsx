@@ -3,6 +3,8 @@ import { BsEye } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import { Link } from 'react-router-dom';
 import { useRole } from '../../context/RoleContext';
+import { useDebounce } from '../../hooks/useDebounce'; // Import the hook
+import apiClient from '../../api/apiClient'; // Your configured Axios instance
 
 // Sample data for demonstration
 const sampleOrders = [
@@ -14,11 +16,20 @@ const sampleOrders = [
   // ...add more sample orders to test pagination
 ];
 
+// const statusStyles = {
+//     Processing: 'bg-yellow-100 text-yellow-800',
+//     Shipped: 'bg-blue-100 text-blue-800',
+//     Delivered: 'bg-green-100 text-green-800',
+//     Cancelled: 'bg-red-100 text-red-800',
+// };
+
+
 const statusStyles = {
-    Processing: 'bg-yellow-100 text-yellow-800',
-    Shipped: 'bg-blue-100 text-blue-800',
-    Delivered: 'bg-green-100 text-green-800',
-    Cancelled: 'bg-red-100 text-red-800',
+    PENDING: 'bg-gray-100 text-gray-800',
+    PROCESSING: 'bg-yellow-100 text-yellow-800',
+    SHIPPED: 'bg-blue-100 text-blue-800',
+    DELIVERED: 'bg-green-100 text-green-800',
+    CANCELLED: 'bg-red-100 text-red-800',
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -26,27 +37,66 @@ const ITEMS_PER_PAGE = 10;
 export default function AdminOrders() {
   const { basePath } = useRole();
 
-  const [orders, setOrders] = useState(sampleOrders);
-  const [filteredOrders, setFilteredOrders] = useState(sampleOrders);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // --- Pagination State ---
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // Debounce search term
+
+// --- Data Fetching Effect ---
   useEffect(() => {
-    let result = orders.filter(order => 
-      order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    if (statusFilter !== 'All') {
-      result = result.filter(order => order.status === statusFilter);
-    }
-    setFilteredOrders(result);
-    setCurrentPage(1); // Reset to first page on filter change
-  }, [searchTerm, statusFilter, orders]);
+      const fetchOrders = async () => {
+          setLoading(true);
+          try {
+              const params = new URLSearchParams();
+              
+              // Spring Pageable is 0-indexed, so we subtract 1
+              params.append('page', currentPage - 1);
+              params.append('size', 5);
 
-  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
-  const paginatedOrders = filteredOrders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+              if (debouncedSearchTerm) {
+                  params.append('search', debouncedSearchTerm);
+              }
+              if (statusFilter !== 'All') {
+                  params.append('status', statusFilter);
+              }
 
+              const response = await apiClient.get('/api/admin/orders', { params })
+              const data = response.data.data;
+
+              setOrders(data.content || []);
+              setTotalPages(data.totalPages);
+              setTotalElements(data.totalElements);
+
+          } catch (err) {
+              setError('Failed to fetch orders.');
+              console.error(err);
+          } finally {
+              setLoading(false);
+          }
+      };
+
+      fetchOrders();
+  }, [debouncedSearchTerm, statusFilter, currentPage]); // Re-fetch when these change
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+      setCurrentPage(1);
+  }, [debouncedSearchTerm, statusFilter]);
+
+  if (loading) return <AdminPageContainer><div>Loading orders...</div></AdminPageContainer>;
+  if (error) return <AdminPageContainer><div>{error}</div></AdminPageContainer>;
+  // if ( orders.length === 0) return <AdminPageContainer><div>No orders found.</div></AdminPageContainer>;
+
+  // --- Filtered Orders based on search and status ---
   return (
     <AdminPageContainer>
       <div className="p-6">
@@ -66,12 +116,13 @@ export default function AdminOrders() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option>All</option>
-            <option>Processing</option>
-            <option>Shipped</option>
-            <option>Delivered</option>
-            <option>Cancelled</option>
-          </select>
+            <option value="">All</option>
+            <option value="PENDING">Pending</option>
+            <option value="PROCESSING">Processing</option>
+            <option value="SHIPPED">Shipped</option>
+            <option value="DELIVERED">Delivered</option>
+            <option value="CANCELLED">Cancelled</option>
+        </select>
         </div>
 
         {/* Orders Table */}
@@ -88,12 +139,12 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody>
-              {paginatedOrders.map(order => (
+              {orders.map(order => (
                 <tr key={order.id} className="border-b border-accent hover:bg-ivory/50">
                   <td className="p-4 font-medium text-primary">{order.id}</td>
-                  <td className="p-4">{order.customerName}</td>
-                  <td className="p-4">{order.date}</td>
-                  <td className="p-4">{order.total}</td>
+                  <td className="p-4">{order.customer?.customerName || 'N/A'}</td>
+                  <td className="p-4">{new Date(order.orderDate).toLocaleDateString()}</td>
+                  <td className="p-4">₹{order.totalAmount.toFixed(2)}</td>
                   <td className="p-4">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[order.status]}`}>
                       {order.status}
@@ -110,12 +161,17 @@ export default function AdminOrders() {
               ))}
             </tbody>
           </table>
+          {!loading && orders.length === 0 && (
+            <div className="text-center p-8">
+                <p className="text-text-medium">No orders match the current filters.</p>
+            </div>
+          )}
         </div>
         
         {/* Pagination */}
         <div className="flex justify-between items-center mt-6">
             <span className="text-sm text-text-medium">
-                Showing {paginatedOrders.length} of {filteredOrders.length} orders
+              Showing {orders.length} of {totalElements} orders
             </span>
             <div className="flex gap-2">
                 <button 
@@ -127,7 +183,7 @@ export default function AdminOrders() {
                 </button>
                 <button 
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
-                    disabled={currentPage === totalPages}
+                    disabled={currentPage === totalPages || totalPages === 0}
                     className="px-3 py-1 text-sm bg-white border border-accent rounded-lg disabled:opacity-50"
                 >
                     Next

@@ -5,7 +5,7 @@ import AdminPageContainer from '../components/AdminPageContainer';
 import apiClient from '../../api/apiClient';
 import { BsUpload } from 'react-icons/bs';
 
-const API_URL = "http://localhost:2025";
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Helper to generate a URL-friendly slug from a title string
 const generateSlug = (title) => {

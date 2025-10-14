@@ -3,6 +3,8 @@ import AdminLayout from '../../layouts/AdminLayout';
 import { Link, useParams } from 'react-router-dom';
 import { BsPrinter } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
+import apiClient from '../../api/apiClient';
+import { Mail, MapPin, Phone } from 'lucide-react';
 
 // More detailed sample data for a single order view
 const sampleOrders = [
@@ -42,17 +44,58 @@ const statusStyles = {
 export default function ViewOrders() {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true); // Add loading state
+  const [error, setError] = useState('');     // Add error state
 
   useEffect(() => {
-    // In a real app, you would fetch this data from your API
-    const foundOrder = sampleOrders.find(o => o.id === id);
-    setOrder(foundOrder);
-  }, [id]);
+    const fetchOrder = async () => {
+        try {
+            setLoading(true);
+            // Use your apiClient to fetch the specific order
+            const response = await apiClient.get(`/api/admin/orders/${id}`);
+            setOrder(response.data.data);
+        } catch (err) {
+            setError(err?.response?.data?.message || 'Failed to load order details.');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleStatusChange = (e) => {
-    setOrder(prev => ({ ...prev, status: e.target.value }));
-    // Here you would typically make an API call to update the status
+    fetchOrder();
+  }, [id]); // Re-fetch if the order ID changes
+
+  const handleStatusChange = async (e) => {
+    const newStatus = e.target.value;
+    const originalStatus = order.status; // Keep the original status in case of an error
+
+    // 1. Optimistic UI Update: Update the state immediately for a responsive feel
+    setOrder(prev => ({ ...prev, status: newStatus }));
+
+    try {
+        // 2. Make the API call to your backend
+        await apiClient.patch(
+            `/api/admin/orders/${order.id}/status`, 
+            null, // PATCH requests can have a null body
+            { params: { newStatus } } // Send the new status as a query parameter
+        );
+        // You could add a success notification here (e.g., using a toast library)
+    } catch (err) {
+        // 3. If the API call fails, revert the change and show an error
+        alert('Failed to update status. Please try again.');
+        console.error(err);
+        setOrder(prev => ({ ...prev, status: originalStatus }));
+    }
   };
+
+  // Add loading and error handling before rendering
+  if (loading) {
+      return <AdminPageContainer><div className="p-6 text-center">Loading order...</div></AdminPageContainer>;
+  }
+
+  if (error) {
+      return <AdminPageContainer><div className="p-6 text-center text-red-500">{error}</div></AdminPageContainer>;
+  }
 
   if (!order) {
     return (
@@ -79,16 +122,21 @@ export default function ViewOrders() {
         <div className="bg-white p-8 rounded-2xl shadow-md">
             {/* Order Summary Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-b border-accent pb-6 mb-6">
-                <div><p className="text-sm text-text-medium">Order Date</p><p className="font-semibold">{order.date}</p></div>
-                <div><p className="text-sm text-text-medium">Customer</p><p className="font-semibold">{order.customer.name}</p></div>
-                <div><p className="text-sm text-text-medium">Payment Status</p><p className="font-semibold text-green-600">{order.payment.status}</p></div>
+                <div><p className="text-sm text-text-medium">Order Date</p><p className="font-semibold">{order.orderDate }</p></div>
+                <div><p className="text-sm text-text-medium">Customer</p><p className="font-semibold">{order.customer.customerName}</p></div>
+                {/* <div><p className="text-sm text-text-medium">Payment Status</p><p className="font-semibold text-green-600">{order.payment.status}</p></div> */}
                 <div>
                     <label className="text-sm text-text-medium">Order Status</label>
-                    <select value={order.status} onChange={handleStatusChange} className={`w-full mt-1 p-1 text-sm font-semibold rounded-md border-2 focus:ring-grey-300 ${statusStyles[order.status]}`}>
-                        <option>Processing</option>
-                        <option>Shipped</option>
-                        <option>Delivered</option>
-                        <option>Cancelled</option>
+                    <select 
+                      value={order.status} 
+                      onChange={handleStatusChange} 
+                      className={`w-full mt-1 p-1 ...`}
+                    >
+                      <option value="PENDING">Pending</option>
+                      <option value="PROCESSING">Processing</option>
+                      <option value="SHIPPED">Shipped</option>
+                      <option value="DELIVERED">Delivered</option>
+                      <option value="CANCELLED">Cancelled</option>
                     </select>
                 </div>
             </div>
@@ -97,13 +145,31 @@ export default function ViewOrders() {
             <div className="grid md:grid-cols-2 gap-6 mb-8">
                 <div>
                     <h3 className="font-semibold text-text-dark mb-2">Customer Details</h3>
-                    <p className="text-sm">{order.customer.name}</p>
-                    <p className="text-sm">{order.customer.email}</p>
-                    <p className="text-sm">{order.customer.phone}</p>
+                    <p className="text-sm">{order.customer.customerName}</p>
+                    
+                    <div className="flex items-center gap-2 mt-2">
+                      <Mail className="text-primary" size={18} />
+                      <a
+                        href={order.customer.email ? `mailto:${order.customer.email}` : null} className="text-sm"
+                      >
+                        {order.customer.email || "N/A"}
+                      </a>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Phone className="text-primary" size={18} />
+                      <a
+                        href={order.customer.phoneNumber ? `tel:${order.customer.phoneNumber}` : null} className="text-sm"
+                      >
+                        {order.customer.phoneNumber || "N/A"}
+                      </a>
+                    </div>
                 </div>
                 <div>
-                    <h3 className="font-semibold text-text-dark mb-2">Shipping Address</h3>
-                    <p className="text-sm">{order.customer.shippingAddress}</p>
+                    <div className="flex items-center gap-2 my-2">
+                      <MapPin className="text-primary" size={18} />
+                      <h3 className="font-semibold text-text-dark">Shipping Address</h3>
+                    </div>
+                    <p className="text-sm">{order.shippingAddress.street}</p>
                 </div>
             </div>
 
@@ -121,11 +187,11 @@ export default function ViewOrders() {
                             </tr>
                         </thead>
                         <tbody>
-                            {order.items.map(item => (
-                                <tr key={item.id} className="border-b border-accent">
+                            {order.orderItems.map(item => (
+                                <tr key={item.productId} className="border-b border-accent">
                                     <td className="p-3 flex items-center gap-3">
-                                        <img src={item.img} alt={item.name} className="w-12 h-12 rounded-md object-cover" loading="lazy" />
-                                        <span>{item.name}</span>
+                                        <img src={item.imageUrl} alt={item.productName} className="w-12 h-12 rounded-md object-cover" loading="lazy" />
+                                        <span>{item.productName}</span>
                                     </td>
                                     <td className="p-3 text-right">₹{item.price.toLocaleString()}</td>
                                     <td className="p-3 text-center">{item.quantity}</td>
@@ -141,9 +207,9 @@ export default function ViewOrders() {
             <div className="flex justify-end mt-6">
                 <div className="w-full max-w-xs space-y-2 text-sm">
                     <div className="flex justify-between"><span className="text-text-medium">Subtotal</span><span>₹{order.subtotal.toLocaleString()}</span></div>
-                    <div className="flex justify-between"><span className="text-text-medium">Shipping</span><span>{order.shipping === 0 ? 'Free' : `₹${order.shipping.toLocaleString()}`}</span></div>
-                    <div className="flex justify-between"><span className="text-text-medium">Tax (GST)</span><span>₹{order.tax.toLocaleString()}</span></div>
-                    <div className="flex justify-between font-bold text-lg text-primary border-t border-accent pt-2 mt-2"><span>Grand Total</span><span>₹{order.total.toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span className="text-text-medium">Shipping</span><span>{order.shippingFee === 0 ? 'Free' : `₹${order.shippingFee.toLocaleString()}`}</span></div>
+                    <div className="flex justify-between"><span className="text-text-medium">Tax (GST)</span><span>₹{order.taxes.toLocaleString()}</span></div>
+                    <div className="flex justify-between font-bold text-lg text-primary border-t border-accent pt-2 mt-2"><span>Grand Total</span><span>₹{order.totalAmount.toLocaleString()}</span></div>
                 </div>
             </div>
         </div>

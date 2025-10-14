@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../layouts/AdminLayout';
 import { Link, useParams } from 'react-router-dom';
+import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import AdminPageContainer from '../components/AdminPageContainer';
-import axios from 'axios';
+import apiClient from '../../api/apiClient';
 
-const API_URL = "http://localhost:2025";
-
-const sampleProducts = [
-  { id: 101, img: "/assets/Dog-food.jpg", name: "Premium Dog Food 10kg", price: 1499, stockQuantity: 58, category: "Food", description: "A balanced, protein-rich formula designed for adult dogs to support muscle growth and a healthy coat. Made with real chicken and whole grains.", sku: 'PWD-F-001', dateAdded: '2025-08-01' },
-  // ... other product data
-];
+const StarRating = ({ rating }) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+        if (i <= rating) {
+            stars.push(<FaStar key={i} className="text-yellow-400" />);
+        } else if (i === Math.ceil(rating) && !Number.isInteger(rating)) {
+            stars.push(<FaStarHalfAlt key={i} className="text-yellow-400" />);
+        } else {
+            stars.push(<FaRegStar key={i} className="text-yellow-400" />);
+        }
+    }
+    return <div className="flex">{stars}</div>;
+};
 
 const stockStatus = (stockQuantity) => {
     if (stockQuantity <= 0) return { text: 'Out of Stock', style: 'bg-red-100 text-red-800' };
@@ -25,12 +33,7 @@ export default function ViewProduct() {const { id } = useParams();
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await axios.get(`${API_URL}/api/products/${id}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        const response = await apiClient.get(`/api/products/${id}`);
         setProduct(response.data.data);
       } catch (err) {
         setError('Could not load product data.');
@@ -81,6 +84,10 @@ export default function ViewProduct() {const { id } = useParams();
                 {/* Details Column */}
                 <div className="md:col-span-2 space-y-4">
                     <h2 className="text-3xl font-bold text-text-dark">{product.name}</h2>
+                    <div className="flex items-center gap-2">
+                        <StarRating rating={product.averageRating} />
+                        <span className="text-sm text-text-medium">({product.numReviews} reviews)</span>
+                    </div>
                     <p className="text-text-medium">{product.description}</p>
                     <div className="grid grid-cols-2 gap-4 border-t border-b border-accent py-4">
                         <div>
@@ -95,15 +102,48 @@ export default function ViewProduct() {const { id } = useParams();
                             </div>
                         </div>
                         <div>
-                            <p className="text-sm text-text-medium">SKU</p>
+                            <p className="text-sm text-text-medium">SKU (Product ID)</p>
                             <p className="font-semibold">{product.sku}</p>
                         </div>
                          <div>
                             <p className="text-sm text-text-medium">Category</p>
                             <p className="font-semibold">{product.category}</p>
                         </div>
+                        {product.featuredSpecies && product.featuredSpecies.length > 0 && (
+                            <div>
+                                <p className="text-sm text-text-medium">For Pet Type(s)</p>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                    {product.featuredSpecies.map(species => (
+                                        <span key={species} className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{species}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
+            </div>
+
+            {/* --- Customer Reviews Section --- */}
+            <div className="bg-white p-8 rounded-2xl shadow-md">
+                <h3 className="text-xl font-bold text-primary mb-4">Customer Reviews</h3>
+                {product.reviews && product.reviews.length > 0 ? (
+                    <div className="space-y-6">
+                        {product.reviews.map((review, index) => (
+                            <div key={index} className="border-b border-accent pb-4">
+                                <div className="flex items-center justify-between mb-1">
+                                    <p className="font-semibold text-text-dark">{review.authorName}</p>
+                                    <StarRating rating={review.rating} />
+                                </div>
+                                <p className="text-xs text-text-medium mb-2">
+                                    {new Date(review.createdAt).toLocaleDateString()}
+                                </p>
+                                <p className="text-text-medium">{review.text}</p>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-text-medium">No reviews yet for this product.</p>
+                )}
             </div>
         </div>
       </div>

@@ -1,11 +1,84 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 // Importing icons for the store info section
 import { BsGeoAltFill, BsClockFill, BsTelephoneFill, BsEnvelopeFill } from 'react-icons/bs';
 import PageContainer from '../../components/PageContainer';
+import apiClient from '../../api/apiClient';
+import { useUser } from '../../context/UserContext';
 
 export default function Contact() {
-  // Based on the current time (Wednesday ~10:30 PM), the store is closed.
-  const isStoreOpen = false;
+  const [isStoreOpen, setIsStoreOpen] = useState(false);
+  const [storeInfo, setStoreInfo] = useState({});
+  const [loading, setLoading] = useState(true);
+  const { user } = useUser();
+
+  useEffect(() => {
+      const checkStoreStatus = () => {
+          const now = new Date();
+          const day = now.getDay(); // Sunday = 0, Saturday = 6
+          const hour = now.getHours();
+          // Open Mon-Sat (1-6), 10 AM to 7 PM (19:00)
+          setIsStoreOpen(day >= 1 && day <= 6 && hour >= 10 && hour < 19);
+      };
+      checkStoreStatus();
+      const interval = setInterval(checkStoreStatus, 60000);
+      return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+        const fetchContactInfo = async () => {
+            try {
+                const response = await apiClient.get('/api/public/info/contact');
+                setStoreInfo(response.data.data);
+            } catch (error) {
+                console.error("Failed to load contact info", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchContactInfo();
+    }, []);
+  
+  // --- Form State and Handlers ---
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [formState, setFormState] = useState({ loading: false, error: '', success: false });
+
+  const handleChange = (e) => {
+      setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+      e.preventDefault();
+      
+      if (user) {
+          formData.name = user.name;
+          formData.email = user.email;
+      }
+      if (!formData.name || !formData.email || !formData.message) {
+          setFormState({ loading: false, error: 'All fields are required.', success: false });
+          return;
+      }
+      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+          setFormState({ loading: false, error: 'Please enter a valid email address.', success: false });
+          return;
+      }
+      if (formData.message.length < 10) {
+          setFormState({ loading: false, error: 'Message should be at least 10 characters long.', success: false });
+          return;
+      }
+
+      setFormState({ loading: true, error: '', success: false });
+
+      try {
+          await apiClient.post('/api/contact', formData);
+          setFormState({ loading: false, error: '', success: true });
+          setFormData({ name: '', email: '', message: '' }); // Clear form
+      } catch (err) {
+          const errorMessage = err.response?.data?.message || "Failed to send message.";
+          setFormState({ loading: false, error: errorMessage, success: false });
+      }
+  };
+
+  if (loading) return <PageContainer><p>Loading...</p></PageContainer>;
 
   return (
     <PageContainer>
@@ -19,14 +92,17 @@ export default function Contact() {
       <div className="grid md:grid-cols-2 gap-10">
         
         {/* --- Enhanced Contact Form --- */}
-        <form className="bg-white p-8 rounded-2xl shadow-lg shadow-grey space-y-5">
+        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg shadow-grey space-y-5">
           <div>
             <label htmlFor="name" className="block text-sm font-semibold mb-2 text-text-dark">Your Name</label>
             <input 
               type="text" 
               id="name" 
+              onChange={handleChange}
               className="w-full bg-ivory/50 border border-accent rounded-md p-3 text-text-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" 
               placeholder="John Doe" 
+              disabled={!!user}
+              value={user ? user.name : formData.name}
             />
           </div>
           <div>
@@ -34,8 +110,11 @@ export default function Contact() {
             <input 
               type="email" 
               id="email" 
+              value={user ? user.email : formData.email}
+              onChange={handleChange}
               className="w-full bg-ivory/50 border border-accent rounded-md p-3 text-text-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" 
               placeholder="you@example.com" 
+              disabled={!!user}
             />
           </div>
           <div>
@@ -43,15 +122,16 @@ export default function Contact() {
             <textarea 
               id="message" 
               rows="5" 
+              value={formData.message}
+              onChange={handleChange}
               className="w-full bg-ivory/50 border border-accent rounded-md p-3 text-text-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" 
-              placeholder="Your message here..."
+              placeholder="Your message here..."  
             ></textarea>
           </div>
-          <button 
-            type="submit" 
-            className="w-full bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors duration-300"
-          >
-            Send Message
+          {formState.success && <p className="text-green-600">Message sent successfully!</p>}
+          {formState.error && <p className="text-red-600">{formState.error}</p>}
+          <button type="submit" disabled={formState.loading} className="w-full bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-secondary transition-colors duration-300">
+              {formState.loading ? 'Sending...' : 'Send Message'}
           </button>
         </form>
 
@@ -62,7 +142,7 @@ export default function Contact() {
             
             <div className="flex items-start space-x-3 mb-4">
               <BsGeoAltFill className="text-primary mt-1 flex-shrink-0" />
-              <p className="text-sm">123 Pet Lane, R.S. Puram,<br/>Coimbatore, Tamil Nadu 641002</p>
+              <p className="text-sm">{storeInfo?.storeAddress}</p>
             </div>
 
             <div className="flex items-center space-x-3 mb-4">
@@ -75,12 +155,12 @@ export default function Contact() {
             
             <div className="flex items-center space-x-3 mb-4">
               <BsTelephoneFill className="text-primary flex-shrink-0" />
-              <a href="tel:+911234567890" className="text-sm hover:text-primary transition">+91 12345 67890</a>
+              <a href={`tel:${storeInfo?.storePhone}`} className="text-sm hover:text-primary transition">{storeInfo?.storePhone}</a>
             </div>
 
             <div className="flex items-center space-x-3">
               <BsEnvelopeFill className="text-primary flex-shrink-0" />
-              <a href="mailto:hello@pawradise.example" className="text-sm hover:text-primary transition">hello@pawradise.example</a>
+              <a href={`mailto:${storeInfo?.storeEmail}`} className="text-sm hover:text-primary transition">{storeInfo?.storeEmail}</a>
             </div>
           </div>
           

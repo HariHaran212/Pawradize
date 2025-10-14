@@ -1,21 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { BsPlusCircleFill, BsPencilSquare, BsTrash } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useRole } from '../../context/RoleContext';
-import axios from 'axios';
-
-const API_URL = "http://localhost:2025"; // Your backend URL
-
-
-// Sample data for demonstration
-const sampleProducts = [
-  { id: 101, img: "/assets/Dog-food.jpg", name: "Premium Dog Food 10kg", price: 1499, stock: 58, category: "Food" },
-  { id: 102, img: "/assets/Cat-litter.jpg", name: "Eco-Friendly Cat Litter", price: 599, stock: 32, category: "Supplies" },
-  { id: 103, img: "/assets/Comfy-pet-bed.jpg", name: "Comfy Pet Bed (Medium)", price: 2299, stock: 12, category: "Accessories" },
-  { id: 104, img: "/assets/Feather-toy.jpeg", name: "Interactive Feather Toy", price: 299, stock: 4, category: "Toys" },
-  { id: 105, img: "/assets/Cat-food.jpg", name: "Gourmet Cat Food", price: 899, stock: 0, category: "Food" },
-];
+import apiClient from '../../api/apiClient';
 
 const stockStatus = (stock) => {
     if (stock <= 0) return { text: 'Out of Stock', style: 'bg-red-100 text-red-800' };
@@ -26,7 +14,6 @@ const stockStatus = (stock) => {
 export default function AdminProducts() {
   const { basePath } = useRole();
 
-	const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -36,15 +23,10 @@ export default function AdminProducts() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const response = await axios.get(`${API_URL}/api/products`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await apiClient.get(`/api/products/admin`);
         setProducts(response.data.data);
       } catch (err) {
-        setError('Failed to fetch products. Please try again later.');
+        setError(err?.response?.data?.message || 'Failed to fetch products. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -59,16 +41,11 @@ export default function AdminProducts() {
   const handleDelete = async (productId) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
-        const token = localStorage.getItem("authToken");
-        await axios.delete(`${API_URL}/api/products/${productId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        await apiClient.delete(`/api/products/${productId}`);
         // On success, remove the product from the local state for instant UI update
         setProducts(products.filter(p => p.id !== productId));
       } catch (err) {
-        alert("Failed to delete product. You may not have the required permissions.");
+        alert(err?.response?.data?.message || "Failed to delete product. You may not have the required permissions.");
       }
     }
   };
