@@ -62,7 +62,7 @@ export default function ShopPage() {
                 setProducts(response.data.data.content);
                 setTotalPages(response.data.data.totalPages);
             } catch (err) {
-                setError('Could not load products. Please try again.');
+                setError(err.response?.data?.message || 'Could not load products. Please try again.');
             } finally {
                 setLoading(false);
             }

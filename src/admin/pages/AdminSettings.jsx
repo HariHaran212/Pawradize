@@ -56,7 +56,7 @@ export default function AdminSettings() {
               const response = await apiClient.get('/api/admin/settings');
               setSettings(response.data.data);
           } catch (err) {
-              setError('Failed to load settings.');
+              setError(err.response?.data?.message || 'Failed to load settings.');
               console.error(err);
           } finally {
               setLoading(false);

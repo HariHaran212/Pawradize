@@ -29,7 +29,7 @@ export default function OrderHistoryPage() {
                 const sortedOrders = response.data.data.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
                 setOrders(sortedOrders);
             } catch (err) {
-                setError('Could not fetch your order history.');
+                setError(err.response?.data?.message || 'Could not fetch your order history.');
                 console.error(err);
             } finally {
                 setLoading(false);

@@ -11,8 +11,6 @@ export default function PetCareGuides() {
         const fetchGuides = async () => {
             try {
                 const response = await apiClient.get('/api/content');
-                // It's good practice to filter for published content on the frontend
-                // as a safeguard, though ideally the backend should only send published guides.
                 const publishedGuides = response.data.data.filter(guide => guide.status === 'Published');
                 setGuides(publishedGuides);
             } catch (err) {
@@ -24,7 +22,7 @@ export default function PetCareGuides() {
         };
 
         fetchGuides();
-    }, []); // Empty dependency array ensures this runs only once on mount
+    }, []);
 
     if (loading) {
         // In a real app, you could replace this with skeleton loader cards for better UX

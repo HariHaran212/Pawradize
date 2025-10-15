@@ -4,6 +4,7 @@ import { FcGoogle } from "react-icons/fc"; // Google Icon
 import { FaApple } from "react-icons/fa"; // Optional other logins
 import { useUser } from "../../context/UserContext";
 import apiClient from "../../api/apiClient";
+import { getBasePathForRole } from "../../utils/helper";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -48,9 +49,14 @@ export default function AuthPage() {
         localStorage.setItem("authToken", token); // Save token to local storage
         // console.log(response);
         
-        await login(token);
+        const loggedInUser = await login(token);
 
-        navigate("/");
+        if (loggedInUser) {
+            const path = getBasePathForRole(loggedInUser.role);
+            navigate(path, { replace: true });
+        } else {
+            navigate('/');
+        }
       } else {
         // On successful registration, switch to the login tab
         alert("Registration successful! Please log in.");

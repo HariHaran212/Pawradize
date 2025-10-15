@@ -1,25 +1,16 @@
 import React, { useState } from 'react';
-import AdminLayout from '../../layouts/AdminLayout';
 import { Link, useNavigate } from 'react-router-dom';
 import { BsUpload } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
-import { useRole } from '../../context/RoleContext';
 import apiClient from '../../api/apiClient';
+import { useUser } from '../../context/UserContext';
+import { initialProductState, speciesOptions } from '../../utils/helper';
 
 export default function AddProduct() {
-  const { basePath } = useRole();
+  const { basePath } = useUser();
   const navigate = useNavigate();
 
-  const [productData, setProductData] = useState({
-    sku: '',
-    name: '',
-    description: '',
-    price: 0,
-    stockQuantity: 0,
-    category: 'Food',
-    brand: '',
-    featuredSpecies: [],
-  });
+  const [productData, setProductData] = useState(initialProductState);
 
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
@@ -68,7 +59,7 @@ export default function AddProduct() {
     }
 
     try {
-      await apiClient.post(`/api/products`, formData, {
+      await apiClient.post(`/api/admin/products`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -84,8 +75,6 @@ export default function AddProduct() {
       setLoading(false);
     }
   };
-
-  const speciesOptions = ['Dog', 'Cat', 'Bird', 'Rabbit', 'Fish', 'Other'];
 
   return (
     <AdminPageContainer>

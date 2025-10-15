@@ -2,30 +2,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BsUpload } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
-import { useRole } from '../../context/RoleContext';
 import apiClient from '../../api/apiClient';
-
-const API_URL = "http://localhost:2025";
-
-const petTraits = ["Good with Children", "Good with Other Dogs", "Good with Cats", "Apartment Friendly", "House-Trained"];
+import { useUser } from '../../context/UserContext';
+import { initialPetState, petTraits } from '../../utils/helper'
 
 export default function AddPet() {
-  const { basePath } = useRole();
+  const { basePath } = useUser();
   const navigate = useNavigate();
 
   // State aligned with the backend Pet model
-  const [petData, setPetData] = useState({
-    name: '',
-    species: 'Dog',
-    breed: '',
-    dateOfBirth: '',
-    gender: 'Male',
-    shortDescription: '',
-    longDescription: '',
-    price: 0,
-    status: 'AVAILABLE',
-    personalityTraits: [],
-  });
+  const [petData, setPetData] = useState(initialPetState);
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -75,7 +61,7 @@ export default function AddPet() {
       // Replace with your actual API endpoint
       const token = localStorage.getItem("authToken");
       
-      await apiClient.post(`/api/pets`, formData, {
+      await apiClient.post(`/api/admin/pets`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },

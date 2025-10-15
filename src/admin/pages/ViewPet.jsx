@@ -2,36 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import AdminPageContainer from '../components/AdminPageContainer';
 import apiClient from '../../api/apiClient';
-import { useRole } from '../../context/RoleContext';
-
-// Helper function to determine the style for the status badge
-const getStatusStyles = (status) => {
-    switch (status) {
-        case 'Available':
-            return 'bg-green-100 text-green-800';
-        case 'Pending':
-            return 'bg-yellow-100 text-yellow-800';
-        case 'Adopted':
-            return 'bg-blue-100 text-blue-800';
-        default:
-            return 'bg-gray-100 text-gray-800';
-    }
-};
+import { useUser } from '../../context/UserContext';
+import { getPetStatusStyles, getPetStatusText, initialPetState } from '../../utils/helper';
 
 export default function ViewPet() {
     const { id } = useParams();
-    const { basePath } = useRole();
-    const [pet, setPet] = useState(null);
+    const { basePath } = useUser();
+    const [pet, setPet] = useState(initialPetState);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchPet = async () => {
             try {
-                const response = await apiClient.get(`/api/pets/${id}`);
+                const response = await apiClient.get(`/api/admin/pets/${id}`);
                 setPet(response.data.data);
             } catch (err) {
-                setError('Could not fetch pet details. The pet may not exist.');
+                setError(err.response?.data?.message || 'Could not fetch pet details. The pet may not exist.');
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -64,7 +51,7 @@ export default function ViewPet() {
 
             <div className="flex justify-between items-center my-6">
                 <h1 className="text-2xl font-bold text-primary">Pet Details</h1>
-                <Link to={`/admin/pets/edit/${pet.id}`} className="bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
+                <Link to={`${basePath}/pets/edit/${pet.id}`} className="bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
                     Edit Pet
                 </Link>
             </div>
@@ -80,8 +67,8 @@ export default function ViewPet() {
                     <div className="md:col-span-2 space-y-6">
                         <div className="flex items-baseline gap-4">
                             <h2 className="text-3xl font-bold text-text-dark">{pet.name}</h2>
-                            <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusStyles(pet.status)}`}>
-                                {pet.status}
+                            <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getPetStatusStyles(pet.status)}`}>
+                                {getPetStatusText(pet.status)}
                             </span>
                         </div>
 

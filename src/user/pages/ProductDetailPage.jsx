@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
                 const response = await apiClient.get(`/api/products/${id}`);
                 setProduct(response.data.data);
             } catch (err) {
-                setError("Product not found or failed to load.");
+                setError(err.response?.data?.message || "Product not found or failed to load.");
             } finally {
                 setLoading(false);
             }

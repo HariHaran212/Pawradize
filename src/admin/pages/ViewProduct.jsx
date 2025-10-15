@@ -1,42 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../layouts/AdminLayout';
 import { Link, useParams } from 'react-router-dom';
-import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import AdminPageContainer from '../components/AdminPageContainer';
 import apiClient from '../../api/apiClient';
+import { initialProductState, StarRating, stockStatus } from '../../utils/helper';
+import { useUser } from '../../context/UserContext';
 
-const StarRating = ({ rating }) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-        if (i <= rating) {
-            stars.push(<FaStar key={i} className="text-yellow-400" />);
-        } else if (i === Math.ceil(rating) && !Number.isInteger(rating)) {
-            stars.push(<FaStarHalfAlt key={i} className="text-yellow-400" />);
-        } else {
-            stars.push(<FaRegStar key={i} className="text-yellow-400" />);
-        }
-    }
-    return <div className="flex">{stars}</div>;
-};
-
-const stockStatus = (stockQuantity) => {
-    if (stockQuantity <= 0) return { text: 'Out of Stock', style: 'bg-red-100 text-red-800' };
-    if (stockQuantity <= 10) return { text: 'Low Stock', style: 'bg-yellow-100 text-yellow-800' };
-    return { text: 'In Stock', style: 'bg-green-100 text-green-800' };
-};
-
-export default function ViewProduct() {const { id } = useParams();
-  const [product, setProduct] = useState(null);
+export default function ViewProduct() {
+  const { basePath } = useUser();
+  const { id } = useParams();
+  const [product, setProduct] = useState(initialProductState);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await apiClient.get(`/api/products/${id}`);
-        setProduct(response.data.data);
+        const response = await apiClient.get(`/api/admin/products/${id}`);
+        const data = response.data.data;
+        setProduct(prev => ({ ...prev, ...data }));
       } catch (err) {
-        setError('Could not load product data.');
+        setError(err.response?.data?.message || 'Could not load product data.');
         console.error(err);
       } finally {
         setLoading(false);
@@ -55,7 +39,7 @@ export default function ViewProduct() {const { id } = useParams();
           <AdminLayout>
               <div className="p-6 text-center">
                   <h2 className="text-xl font-semibold">{error || 'Product not found.'}</h2>
-                  <Link to="/admin/products" className="text-primary hover:underline mt-4 inline-block">← Back to Products</Link>
+                  <Link to={`${basePath}/products`} className="text-primary hover:underline mt-4 inline-block">← Back to Products</Link>
               </div>
           </AdminLayout>
       );
@@ -66,11 +50,11 @@ export default function ViewProduct() {const { id } = useParams();
   return (
     <AdminPageContainer>
       <div className="p-6">
-        <Link to="/admin/products" className="text-secondary hover:underline">← Back to Products List</Link>
+        <Link to={`${basePath}/products`} className="text-secondary hover:underline">← Back to Products List</Link>
 
         <div className="flex justify-between items-center my-6">
           <h1 className="text-2xl font-bold text-primary">Product Details</h1>
-          <Link to={`/admin/products/edit/${product.id}`} className="bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
+          <Link to={`${basePath}/products/edit/${product.id}`} className="bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
             Edit Product
           </Link>
         </div>

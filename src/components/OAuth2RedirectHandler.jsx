@@ -1,8 +1,7 @@
-// src/components/OAuth2RedirectHandler.js
-
 import React, { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { getBasePathForRole } from '../utils/helper';
 
 export default function OAuth2RedirectHandler() {
   const [searchParams] = useSearchParams();
@@ -17,12 +16,16 @@ export default function OAuth2RedirectHandler() {
 
       if (token) {
         // If a token is present, save it to localStorage
-        // console.log("OAuth2 token received:", token);
         localStorage.setItem('authToken', token);
-        await login(token);
         
-        // Redirect to the homepage or dashboard
-        navigate('/'); 
+        const loggedInUser = await login(token);
+        
+        if (loggedInUser) {
+            const path = getBasePathForRole(loggedInUser.role);
+            navigate(path, { replace: true });
+        } else {
+            navigate('/'); // Fallback to homepage
+        }
       } else if (error) {
         // If there's an error, log it and redirect to the login page with an alert
         console.error("OAuth2 Error:", error);

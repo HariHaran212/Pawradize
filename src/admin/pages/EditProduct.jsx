@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BsUpload } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
-import { useRole } from '../../context/RoleContext';
 import apiClient from '../../api/apiClient';
+import { useUser } from '../../context/UserContext';
 
 export default function EditProduct() {
   const { id } = useParams(); // Get product ID from URL
-  const { basePath } = useRole();
+  const { basePath } = useUser();
   const navigate = useNavigate();
   
   const [productData, setProductData] = useState({
@@ -30,7 +30,7 @@ export default function EditProduct() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await apiClient.get(`/api/products/${id}`);
+        const response = await apiClient.get(`/api/admin/products/${id}`);
         const product = response.data.data;
 
         // Populate form with fetched data
@@ -47,7 +47,7 @@ export default function EditProduct() {
         setSku(product.sku); // SKU is not editable
         setImagePreview(product.imageUrl); // Set initial image preview from URL
       } catch (err) {
-        setError("Failed to fetch product data.");
+        setError(err.response?.data?.message || "Failed to fetch product data.");
       }
     };
     fetchProduct();
@@ -97,7 +97,7 @@ export default function EditProduct() {
     }
 
     try {
-      await apiClient.put(`/api/products/${id}`, formData, {
+      await apiClient.put(`/api/admin/products/${id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       alert("Product updated successfully!");
@@ -200,7 +200,7 @@ export default function EditProduct() {
                     >
                       {loading ? "Saving..." : "Update Product"}
                     </button>
-                    <Link to="/admin/products" className="w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-300 transition-colors text-center">Cancel</Link>
+                    <Link to={`${basePath}/products`} className="w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-300 transition-colors text-center">Cancel</Link>
                  </div>
               </div>
           </div>

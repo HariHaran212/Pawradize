@@ -4,6 +4,7 @@ import { BsBook, BsPinMapFill } from 'react-icons/bs'; // Removed BsWhistle
 import { FaLeaf, FaChevronDown, FaBullhorn } from 'react-icons/fa'; // Replaced FaWhistle with FaBullhorn
 import PageContainer from '../../components/PageContainer';
 import PetCareGuides from '../components/PetCareGuides';
+
 const resources = [
   {
     id: 1,
