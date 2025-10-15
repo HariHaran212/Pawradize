@@ -61,7 +61,7 @@ function App() {
       {/* <Route path="/admin" element={<AdminLayout />}>
         <Route element={<AdminRoute />}> */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route element={<RoleBasedRoute allowedRoles={['SUPER_ADMIN', 'USER']} />}>
+          <Route element={<RoleBasedRoute allowedRoles={['SUPER_ADMIN']} />}>
             <Route index element={<AdminDashboard />} />
             <Route path="profile" element={<UserProfile />} />
             <Route path="settings" element={<AdminSettings />} />
@@ -143,15 +143,5 @@ function App() {
     </Routes>
   );
 }
-
-// Note: You must also wrap your App component in <BrowserRouter> in your main.jsx or index.js
-// Example for main.jsx:
-// ReactDOM.createRoot(document.getElementById('root')).render(
-//   <React.StrictMode>
-//     <BrowserRouter>
-//       <App />
-//     </BrowserRouter>
-//   </React.StrictMode>
-// );
 
 export default App;
