@@ -2,40 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { BsEye } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import { Link } from 'react-router-dom';
-import { useRole } from '../../context/RoleContext';
-import { useDebounce } from '../../hooks/useDebounce'; // Import the hook
-import apiClient from '../../api/apiClient'; // Your configured Axios instance
+import { useDebounce } from '../../hooks/useDebounce';
+import apiClient from '../../api/apiClient'
+import { useUser } from '../../context/UserContext';
+import { formatDate, getOrderStatusStyles } from '../../utils/helper';
 
-// Sample data for demonstration
-const sampleOrders = [
-  { id: 'PAW-84322', customerName: 'Priya K.', date: '2025-09-26', total: '₹1,798', status: 'Processing' },
-  { id: 'PAW-84321', customerName: 'Rohan S.', date: '2025-09-25', total: '₹2,299', status: 'Shipped' },
-  { id: 'PAW-84320', customerName: 'Anjali M.', date: '2025-09-25', total: '₹599', status: 'Delivered' },
-  { id: 'PAW-84319', customerName: 'Vikram P.', date: '2025-09-24', total: '₹1,499', status: 'Delivered' },
-  { id: 'PAW-84318', customerName: 'Sneha G.', date: '2025-09-22', total: '₹299', status: 'Cancelled' },
-  // ...add more sample orders to test pagination
-];
-
-// const statusStyles = {
-//     Processing: 'bg-yellow-100 text-yellow-800',
-//     Shipped: 'bg-blue-100 text-blue-800',
-//     Delivered: 'bg-green-100 text-green-800',
-//     Cancelled: 'bg-red-100 text-red-800',
-// };
-
-
-const statusStyles = {
-    PENDING: 'bg-gray-100 text-gray-800',
-    PROCESSING: 'bg-yellow-100 text-yellow-800',
-    SHIPPED: 'bg-blue-100 text-blue-800',
-    DELIVERED: 'bg-green-100 text-green-800',
-    CANCELLED: 'bg-red-100 text-red-800',
-};
-
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 5;
 
 export default function AdminOrders() {
-  const { basePath } = useRole();
+  const { basePath } = useUser();
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,9 +33,8 @@ export default function AdminOrders() {
           try {
               const params = new URLSearchParams();
               
-              // Spring Pageable is 0-indexed, so we subtract 1
               params.append('page', currentPage - 1);
-              params.append('size', 5);
+              params.append('size', ITEMS_PER_PAGE);
 
               if (debouncedSearchTerm) {
                   params.append('search', debouncedSearchTerm);
@@ -77,7 +51,7 @@ export default function AdminOrders() {
               setTotalElements(data.totalElements);
 
           } catch (err) {
-              setError('Failed to fetch orders.');
+              setError(err.response?.data?.message || 'Failed to fetch orders.');
               console.error(err);
           } finally {
               setLoading(false);
@@ -143,10 +117,10 @@ export default function AdminOrders() {
                 <tr key={order.id} className="border-b border-accent hover:bg-ivory/50">
                   <td className="p-4 font-medium text-primary">{order.id}</td>
                   <td className="p-4">{order.customer?.customerName || 'N/A'}</td>
-                  <td className="p-4">{new Date(order.orderDate).toLocaleDateString()}</td>
+                  <td className="p-4">{formatDate(order.orderDate)}</td>
                   <td className="p-4">₹{order.totalAmount.toFixed(2)}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[order.status]}`}>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getOrderStatusStyles(order.status)}`}>
                       {order.status}
                     </span>
                   </td>

@@ -7,14 +7,6 @@ import PaginationControls from '../components/PaginationControls';
 
 const allRoles = ['USER', 'STORE_MANAGER', 'ADOPTION_COORDINATOR', 'SUPER_ADMIN'];
 
-
-const sampleUsers = [
-  { id: 1, avatar: 'https://via.placeholder.com/100', name: 'Admin John', email: 'john.admin@pawradise.com', role: 'Super Admin', joinedDate: '2025-01-15' },
-  { id: 2, avatar: 'https://via.placeholder.com/100', name: 'Manager Priya', email: 'priya.manager@pawradise.com', role: 'Store Manager', joinedDate: '2025-09-26' },
-  { id: 3, avatar: 'https://via.placeholder.com/100', name: 'Coordinator Rohan', email: 'rohan.coordinator@pawradise.com', role: 'Adoption Coordinator', joinedDate: '2025-09-25' },
-  { id: 4, avatar: 'https://via.placeholder.com/100', name: 'User Anjali', email: 'anjali.m@example.com', role: 'User', joinedDate: '2025-09-25' },
-];
-
 // --- Modal Component for Editing Roles ---
 const RoleEditModal = ({ user, isOpen, onClose, onSave }) => {
     const [selectedRole, setSelectedRole] = useState(user?.role || 'USER');
@@ -85,7 +77,7 @@ export default function AdminUsers() {
               setUsers(response.data.data.content);
               setTotalPages(response.data.data.totalPages);
           } catch (err) {
-              setError('Failed to fetch users.');
+              setError(err.response?.data?.message || 'Failed to fetch users.');
           } finally {
               setLoading(false);
           }

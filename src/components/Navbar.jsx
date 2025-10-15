@@ -40,7 +40,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-ivory/70 backdrop-blur-md shadow-md">
+    <nav className="sticky top-0 z-50 bg-ivory/70 backdrop-blur-md shadow-md">
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         
         {/* Logo */}
@@ -79,77 +79,78 @@ export default function Navbar() {
             Search
           </button> */}
 
-          <Link
-            to="/cart"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-secondary transition"
-          >
-            <HiOutlineShoppingCart />Cart
-          </Link>
-
-          {/* Profile Dropdown */}
           {isAuthenticated && user ? (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2 focus:outline-none"
+            <>
+              <Link
+                to="/cart"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-secondary transition"
               >
-                <img
-                  src={user.avatarUrl || `https://placehold.co/100?text=${user.name.charAt(0)}`}
-                  alt="Profile"
-                  className="w-10 h-10 rounded-full"
-                />
-                <span className="hidden sm:block text-sm font-medium text-text-dark">{user.name}</span>
-                <ChevronDown
-                  className={`w-4 h-4 text-gray-600 transition-transform ${
-                    dropdownOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+                <HiOutlineShoppingCart />Cart
+              </Link>
 
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100">
-                  <Link
-                    to="/account"
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-ivory hover:text-primary rounded-t-lg"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <HiOutlineUserCircle /> Profile
-                  </Link>
-                  <Link
-                    to="/orders"
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-ivory hover:text-primary"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <HiOutlineShoppingBag />My Orders
-                  </Link>
-                  <Link
-                    to="/my-requests"
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-ivory hover:text-primary"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <HiOutlineClipboardList />My Requests
-                  </Link>
-                  <Link
-                    to="/settings"
-                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-ivory hover:text-primary"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <HiOutlineCog /> Settings
-                  </Link>
-                  <hr className="my-2 border-accent" />
-                  <Link
-                    to="/login"
-                  >
-                    <button
-                      className="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
-                      onClick={handleLogout}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-2 focus:outline-none"
+                >
+                  <img
+                    src={user.avatarUrl || `https://placehold.co/100?text=${user.name.charAt(0)}`}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <span className="hidden sm:block text-sm font-medium text-text-dark">{user.name}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-600 transition-transform ${
+                      dropdownOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100">
+                    <Link
+                      to="/account"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-ivory hover:text-primary rounded-t-lg"
+                      onClick={() => setDropdownOpen(false)}
                     >
-                      <HiOutlineLogout /> Logout
-                    </button>
-                  </Link>
-                </div>
-              )}
-            </div>
+                      <HiOutlineUserCircle /> Profile
+                    </Link>
+                    <Link
+                      to="/orders"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-ivory hover:text-primary"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      <HiOutlineShoppingBag />My Orders
+                    </Link>
+                    <Link
+                      to="/my-requests"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-ivory hover:text-primary"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      <HiOutlineClipboardList />My Requests
+                    </Link>
+                    <Link
+                      to="/settings"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-ivory hover:text-primary"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      <HiOutlineCog /> Settings
+                    </Link>
+                    <hr className="my-2 border-accent" />
+                    <Link
+                      to="/login"
+                    >
+                      <button
+                        className="flex items-center gap-3 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-lg"
+                        onClick={handleLogout}
+                      >
+                        <HiOutlineLogout /> Logout
+                      </button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </>
           ) : (
             <Link
               to="/login"
@@ -160,6 +161,6 @@ export default function Navbar() {
           )}
         </div>
       </div>
-    </header>
+    </nav>
   );
 }

@@ -1,34 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import AdoptionCoordinatorLayout from '../../layouts/AdoptionCoordinatorLayout';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BsUpload } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
-import { useRole } from '../../context/RoleContext';
 import apiClient from '../../api/apiClient';
-
-const samplePets = [ 
-    { id: 11, name: "Buddy", type: "Dog", breed: "Golden Retriever Mix", age: "2 yrs", gender: "Male", shortDescription: 'Playful, vaccinated.', longDescription: 'Buddy loves walks and is great with kids.', status: "Available", goodWith: ["Good with Children", "Good with Other Dogs"], img: "/assets/Dog-1.jpg" },
-    { id: 12, name: "Nala", type: "Cat", breed: "Domestic Shorthair", age: "1.5 yrs", gender: "Female", shortDescription: 'Calm and cuddly.', longDescription: 'Nala is a sweet and gentle soul who loves a warm lap.', status: "Available", goodWith: ["Quiet Homes"], img: "/assets/Cat-1.jpg" },
-    { id: 13, name: "Pip", type: "Rabbit", breed: "Holland Lop", age: "6 mo", gender: "Male", shortDescription: 'Gentle companion.', longDescription: 'Pip is a curious and gentle rabbit with a calm temperament.', status: "Adopted", goodWith: ["Experienced Owners"], img: "/assets/Rabbit-1.jpg" },
-];
-const initialPetState = {
-    name: '',
-    species: 'Dog',
-    breed: '',
-    gender: 'Male',
-    dateOfBirth: '',
-    shortDescription: '',
-    longDescription: '',
-    status: 'AVAILABLE',
-    personalityTraits: [],
-    price: 0,
-};
-
-const petTraits = ["Good with Children", "Good with Other Dogs", "Good with Cats", "Apartment Friendly", "House-Trained"];
+import { useUser } from '../../context/UserContext';
+import { initialPetState, petTraits } from '../../utils/helper';
 
 export default function EditPet() {
   const { id } = useParams();
-  const { basePath } = useRole();
+  const { basePath } = useUser();
   const navigate = useNavigate();
 
   const [petData, setPetData] = useState(initialPetState);
@@ -40,7 +20,7 @@ export default function EditPet() {
   useEffect(() => {
     const fetchPet = async () => {
       try {
-        const response = await apiClient.get(`/api/pets/${id}`);
+        const response = await apiClient.get(`/api/admin/pets/${id}`);
         
         const fetchedPet = response.data.data;
 
@@ -53,7 +33,7 @@ export default function EditPet() {
         });
         setImagePreview(fetchedPet.imageUrl);
       } catch (err) {
-        setError('Failed to load pet data.');
+        setError(err.response?.data?.message || 'Failed to load pet data.');
         console.error(err);
       } finally {
         setLoading(false);
@@ -98,7 +78,7 @@ export default function EditPet() {
       }
 
       try {
-          await apiClient.put(`/api/pets/${id}`, formData, {
+          await apiClient.put(`/api/admin/pets/${id}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
 
@@ -112,9 +92,9 @@ export default function EditPet() {
       }
   };
 
-  // if (loading && !petData) return <AdminPageContainer><p>Loading pet data...</p></AdminPageContainer>;
-  // if (error) return <AdminPageContainer><p className="text-red-500">{error}</p></AdminPageContainer>;
-  // if (!petData) return <AdminPageContainer><p>Pet not found.</p></AdminPageContainer>;
+  if (loading && !petData) return <AdminPageContainer><p>Loading pet data...</p></AdminPageContainer>;
+  if (error) return <AdminPageContainer><p className="text-red-500">{error}</p></AdminPageContainer>;
+  if (!petData) return <AdminPageContainer><p>Pet not found.</p></AdminPageContainer>;
 
 
   return (
@@ -213,7 +193,7 @@ export default function EditPet() {
              </select>
              <div className="flex flex-col gap-3">
                 <button type="submit" className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-secondary">Update Pet</button>
-                <Link to="/adoption/pets" className="w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-300 text-center">Cancel</Link>
+                <Link to={`${basePath}/pets`} className="w-full bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg hover:bg-gray-300 text-center">Cancel</Link>
              </div>
           </div>
         </div>

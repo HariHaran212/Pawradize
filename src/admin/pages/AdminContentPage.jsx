@@ -4,23 +4,11 @@ import { BsPlusCircleFill, BsPencilSquare, BsTrash } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import { useState, useEffect } from 'react';
 import apiClient from '../../api/apiClient';
-
-const API_URL = "http://localhost:2025";
-
-// Sample data for your guides
-const sampleGuides = [
-    { id: 'new-puppy-guide', title: 'Your Guide to Bringing a New Puppy Home', status: 'Published', lastUpdated: '2025-09-28' },
-    { id: 'new-kitten-guide', title: 'Your Guide to Welcoming a New Kitten Home', status: 'Published', lastUpdated: '2025-09-28' },
-    { id: 'pet-anxiety-guide', title: 'Understanding and Easing Pet Anxiety', status: 'Draft', lastUpdated: '2025-09-29' },
-];
-
-const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    // Returns date in YYYY-MM-DD format
-    return new Date(dateString).toLocaleDateString('en-CA');
-};
+import { useUser } from '../../context/UserContext';
+import { formatDateTime } from '../../utils/helper';
 
 export default function AdminContentPage() {
+  const { basePath } = useUser();
   const [guides, setGuides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,10 +16,10 @@ export default function AdminContentPage() {
   useEffect(() => {
       const fetchGuides = async () => {
           try {
-              const response = await apiClient.get(`${API_URL}/api/content`);
+              const response = await apiClient.get(`/api/admin/content`);
               setGuides(response.data.data); // Assuming your ApiResponse wraps the list in a 'data' property
           } catch (err) {
-              setError('Failed to fetch content guides. Please try again later.');
+              setError(err.response?.data?.message || 'Failed to fetch content guides. Please try again later.');
               console.error(err);
           } finally {
               setLoading(false);
@@ -43,7 +31,7 @@ export default function AdminContentPage() {
   const handleDelete = async (guideId) => {
       if (window.confirm('Are you sure you want to permanently delete this guide?')) {
           try {
-              await apiClient.delete(`${API_URL}/api/content/${guideId}`);
+              await apiClient.delete(`/api/admin/content/${guideId}`);
               // Update the UI by removing the deleted guide from the state
               setGuides(currentGuides => currentGuides.filter(guide => guide.id !== guideId));
           } catch (err) {
@@ -66,7 +54,7 @@ export default function AdminContentPage() {
       return guides.map(guide => (
           <tr key={guide.id} className="border-b border-accent hover:bg-ivory/50">
               <td className="p-4 font-medium text-text-dark">
-                <Link to={`/admin/guides/${guide.slug}`}>
+                <Link to={`${basePath}/guides/${guide.slug}`}>
 									{guide.title}
 								</Link>
 							</td>
@@ -78,10 +66,10 @@ export default function AdminContentPage() {
                   </span>
               </td>
               {/* Assuming your Content model has an 'updatedAt' or similar timestamp field */}
-              <td className="p-4">{formatDate(guide.updatedAt)}</td>
+              <td className="p-4">{formatDateTime(guide.updatedAt)}</td>
               <td className="p-4">
                   <div className="flex gap-4">
-                      <Link to={`/admin/guides/edit/${guide.slug}`} className="text-blue-500 hover:text-blue-700" title="Edit">
+                      <Link to={`${basePath}/guides/edit/${guide.slug}`} className="text-blue-500 hover:text-blue-700" title="Edit">
                           <BsPencilSquare size={16} />
                       </Link>
                       <button onClick={() => handleDelete(guide.id)} className="text-red-500 hover:text-red-700" title="Delete">
@@ -97,7 +85,7 @@ export default function AdminContentPage() {
     <AdminPageContainer>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-primary">Manage Content</h1>
-          <Link to="/admin/guides/new" className="flex items-center gap-2 bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
+          <Link to={`${basePath}/guides/new`} className="flex items-center gap-2 bg-primary text-white font-semibold px-4 py-2 rounded-lg hover:bg-secondary transition-colors">
             <BsPlusCircleFill /> Add New Guide
           </Link>
         </div>

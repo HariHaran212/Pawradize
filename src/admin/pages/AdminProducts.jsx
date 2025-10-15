@@ -2,17 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { BsPlusCircleFill, BsPencilSquare, BsTrash } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import { Link } from 'react-router-dom';
-import { useRole } from '../../context/RoleContext';
 import apiClient from '../../api/apiClient';
-
-const stockStatus = (stock) => {
-    if (stock <= 0) return { text: 'Out of Stock', style: 'bg-red-100 text-red-800' };
-    if (stock <= 10) return { text: 'Low Stock', style: 'bg-yellow-100 text-yellow-800' };
-    return { text: 'In Stock', style: 'bg-green-100 text-green-800' };
-};
+import { useUser } from '../../context/UserContext';
+import { stockStatus } from '../../utils/helper';
 
 export default function AdminProducts() {
-  const { basePath } = useRole();
+  const { basePath } = useUser();
 
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,7 +18,7 @@ export default function AdminProducts() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await apiClient.get(`/api/products/admin`);
+        const response = await apiClient.get(`/api/admin/products`);
         setProducts(response.data.data);
       } catch (err) {
         setError(err?.response?.data?.message || 'Failed to fetch products. Please try again later.');
@@ -41,7 +36,7 @@ export default function AdminProducts() {
   const handleDelete = async (productId) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
-        await apiClient.delete(`/api/products/${productId}`);
+        await apiClient.delete(`/api/admin/products/${productId}`);
         // On success, remove the product from the local state for instant UI update
         setProducts(products.filter(p => p.id !== productId));
       } catch (err) {

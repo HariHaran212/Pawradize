@@ -31,7 +31,7 @@ export default function PetDetailPage() {
         setPet(response.data.data); 
       } catch (err) {
         console.error("Failed to fetch pet:", err);
-        setError("Could not load pet details. Please try again later.");
+        setError(err.response?.data?.message || "Could not load pet details. Please try again later.");
       } finally {
         setLoading(false);
       }

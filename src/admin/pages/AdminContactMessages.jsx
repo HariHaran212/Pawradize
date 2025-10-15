@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminPageContainer from '../components/AdminPageContainer';
 import apiClient from '../../api/apiClient';
+import { formatDateTime } from '../../utils/helper';
 
 const statusStyles = {
     NEW: 'bg-blue-100 text-blue-800',
@@ -25,7 +26,7 @@ export default function AdminContactMessages() {
                 const response = await apiClient.get('/api/admin/contact', { params });
                 setMessages(response.data.data);
             } catch (err) {
-                setError('Failed to load messages.');
+                setError(err.response?.data?.message || 'Failed to load messages.');
             } finally {
                 setLoading(false);
             }
@@ -65,7 +66,7 @@ export default function AdminContactMessages() {
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="font-bold">{msg.name} <span className="font-normal text-gray-500">&lt;{msg.email}&gt;</span></p>
-                                <p className="text-xs text-gray-400">{new Date(msg.receivedAt).toLocaleString()}</p>
+                                <p className="text-xs text-gray-400">{formatDateTime(msg.receivedAt)}</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[msg.status]}`}>{msg.status}</span>

@@ -2,11 +2,11 @@
 
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
 import { HiOutlineUserCircle, HiOutlineCog, HiOutlineLogout } from 'react-icons/hi';
+import { useUser } from '../../context/UserContext';
 
 const StoreManagerNavbar = () => {
-  const { currentUser } = useAuth();
+  const { user } = useUser();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const navLinks = [
@@ -34,7 +34,7 @@ const StoreManagerNavbar = () => {
             <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="flex items-center gap-2">
                 <img src="https://via.placeholder.com/100" alt="Admin Avatar" className="w-8 h-8 rounded-full" />
                 <span className="hidden sm:block text-sm font-medium text-text-dark">
-                    {currentUser?.name || 'Manager'}
+                    {user?.name || 'Manager'}
                 </span>
             </button>
             

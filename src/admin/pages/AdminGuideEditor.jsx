@@ -4,8 +4,7 @@ import { Editor } from '@tinymce/tinymce-react';
 import AdminPageContainer from '../components/AdminPageContainer';
 import apiClient from '../../api/apiClient';
 import { BsUpload } from 'react-icons/bs';
-
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+import { initialGuideState } from '../../utils/helper';
 
 // Helper to generate a URL-friendly slug from a title string
 const generateSlug = (title) => {
@@ -17,29 +16,12 @@ const generateSlug = (title) => {
         .replace(/--+/g, '-');          // Replace multiple - with single -
 };
 
-const initialState = {
-    title: '',
-    slug: '',
-    subtitle: '',
-    author: '',
-    snippet: '',
-    content: '',
-    heroImage: '',
-    cta: {
-        title: '',
-        text: '',
-        buttonText: '',
-        buttonLink: '',
-    },
-    status: 'Draft',
-};
-
 export default function AdminGuideEditor() {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEditing = Boolean(id);
 
-    const [guideData, setGuideData] = useState(initialState);
+    const [guideData, setGuideData] = useState(initialGuideState);
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [contentId, setContentId] = useState(null); // To store the content ID after creation
@@ -54,13 +36,13 @@ export default function AdminGuideEditor() {
                     // This assumes the `id` from the URL is the document's unique ID.
                     // A new backend endpoint GET /api/content/id/{id} might be needed for consistency.
                     // For now, we'll assume we can fetch by ID. If not, this would be get(`/api/content/${slug}`).
-                    const response = await apiClient.get(`${API_URL}/api/content/${id}`); // Assumes you add a fetch-by-id endpoint
+                    const response = await apiClient.get(`/api/admin/content/${id}`); // Assumes you add a fetch-by-id endpoint
                     const fetchedData = response.data.data;
-                    setGuideData({ ...initialState, ...fetchedData }); // Clear heroImageUrl to avoid CORS issues
+                    setGuideData({ ...initialGuideState, ...fetchedData }); // Clear heroImageUrl to avoid CORS issues
                     setImagePreview(fetchedData.heroImageUrl || null);
                     setContentId(fetchedData.id);
                 } catch (err) {
-                    setError('Failed to load guide data.');
+                    setError(err.response?.data?.message || 'Failed to load guide data.');
                     console.error(err);
                 } finally {
                     setLoading(false);
@@ -119,18 +101,18 @@ export default function AdminGuideEditor() {
 
         try {
             if (isEditing) {
-                await apiClient.put(`${API_URL}/api/content/${contentId}`, formData, {
+                await apiClient.put(`/api/admin/content/${contentId}`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             } else {
-                await apiClient.post(`${API_URL}/api/content`, formData, {
+                await apiClient.post(`/api/admin/content`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
             }
             alert(`Guide ${isEditing ? 'updated' : 'created'} successfully!`);
             navigate('/admin/content');
         } catch (err) {
-            setError(`Failed to ${isEditing ? 'update' : 'create'} guide.`);
+            setError(err.response?.data?.message || `Failed to ${isEditing ? 'update' : 'create'} guide.`);
             console.error(err);
         } finally {
             setLoading(false);

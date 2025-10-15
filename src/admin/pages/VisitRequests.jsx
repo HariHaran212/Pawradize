@@ -2,13 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BsCheckCircle, BsXCircle } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import apiClient from '../../api/apiClient';
-
-const sampleVisitRequests = [
-    { id: 'VR-001', userName: 'Anjali M.', userContact: 'anjali@example.com', petName: 'Buddy', petType: 'Dog', requestedDate: '2025-10-05', status: 'Pending' },
-    { id: 'VR-002', userName: 'Rohan S.', userContact: 'rohan@example.com', petName: 'Nala', petType: 'Cat', requestedDate: '2025-10-04', status: 'Approved' },
-    { id: 'VR-003', userName: 'Vikram P.', userContact: 'vikram@example.com', petName: 'Buddy', petType: 'Dog', requestedDate: '2025-09-30', status: 'Completed' },
-    { id: 'VR-004', userName: 'Sneha G.', userContact: 'sneha@example.com', petName: 'Pip', petType: 'Rabbit', requestedDate: '2025-09-28', status: 'Declined' },
-];
+import { formatDate } from '../../utils/helper';
 
 const statusStyles = {
     PENDING: 'bg-yellow-100 text-yellow-800',
@@ -99,7 +93,7 @@ export default function VisitRequests() {
                                         <p className="text-xs text-text-medium">{req.userContact}</p>
                                     </td>
                                     <td className="p-4 font-medium">{req.petName} ({req.petSpecies})</td>
-                                    <td className="p-4">{req.requestedDate}</td>
+                                    <td className="p-4">{formatDate(req.requestedDate)}</td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusStyles[req.status]}`}>
                                             {req.status}

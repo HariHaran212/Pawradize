@@ -17,7 +17,7 @@ export default function OrderDetailPage() {
                 const response = await apiClient.get(`/api/orders/${orderId}`);
                 setOrder(response.data.data);
             } catch (err) {
-                setError('Could not load order details.');
+                setError(err.response?.data?.message || 'Could not load order details.');
                 console.error(err);
             } finally {
                 setLoading(false);

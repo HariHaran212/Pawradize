@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import PageContainer from '../../components/PageContainer';
 import apiClient from '../../api/apiClient'; // Your centralized axios instance
+import { initialGuideState } from '../../utils/helper';
 
 // Helper function to format the date from the backend
 const formatDate = (dateString) => {
@@ -15,7 +16,7 @@ const formatDate = (dateString) => {
 
 export default function FullGuidePage() {
     const { slug } = useParams();
-    const [guide, setGuide] = useState(null);
+    const [guide, setGuide] = useState(initialGuideState);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -28,16 +29,16 @@ export default function FullGuidePage() {
             }
             try {
                 const response = await apiClient.get(`/api/content/${slug}`);
-                setGuide(response.data.data); // Assuming your ApiResponse wraps the object in a 'data' property
+                setGuide(response.data.data);
             } catch (err) {
-                setError('Guide not found.');
+                setError(err.response?.data?.message || 'Guide not found.');
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
         fetchGuide();
-    }, [slug]); // Re-run the effect if the slug in the URL changes
+    }, [slug]);
 
     if (loading) {
         return <PageContainer><p className="text-center py-10">Loading guide...</p></PageContainer>;

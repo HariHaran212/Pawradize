@@ -14,7 +14,7 @@ export default function FindFriend() {
                 const response = await apiClient.get('/api/pets');
                 setPets(response.data.data); // Assuming ApiResponse wrapper
             } catch (err) {
-                setError('Could not load pets at this time. Please try again later.');
+                setError(err.response?.data?.message || 'Could not load pets at this time. Please try again later.');
                 console.error(err);
             } finally {
                 setLoading(false);

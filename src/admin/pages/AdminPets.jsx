@@ -2,17 +2,13 @@ import React from 'react';
 import { BsPlusCircleFill, BsPencilSquare, BsTrash } from 'react-icons/bs';
 import AdminPageContainer from '../components/AdminPageContainer';
 import { Link } from 'react-router-dom';
-import { useRole } from '../../context/RoleContext';
 import { useState, useEffect } from 'react';
 import apiClient from '../../api/apiClient';
+import { useUser } from '../../context/UserContext';
+import { getPetStatusStyles, getPetStatusText } from '../../utils/helper';
 
-const samplePets = [
-    { id: 11, img: "/assets/Dog-1.jpg", name: "Buddy", breed: "Golden Retriever Mix", status: "Available" },
-    { id: 12, img: "/assets/Cat-1.jpg", name: "Nala", breed: "Domestic Shorthair", status: "Available" },
-    { id: 13, img: "/assets/Rabbit-1.jpg", name: "Pip", breed: "Holland Lop", status: "Adopted" },
-];
-
-export default function AdminPets() {  const { basePath } = useRole();
+export default function AdminPets() {  
+  const { basePath } = useUser();
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,10 +17,10 @@ export default function AdminPets() {  const { basePath } = useRole();
   useEffect(() => {
     const fetchPets = async () => {
       try {
-        const response = await apiClient.get(`/api/pets`);
+        const response = await apiClient.get(`/api/admin/pets`);
         setPets(response.data.data);
       } catch (err) {
-        setError('Could not fetch pet data. Please try again later.');
+        setError(err.response?.data?.message || 'Could not fetch pet data. Please try again later.');
         console.error('Fetch error:', err);
       } finally {
         setLoading(false);
@@ -40,7 +36,7 @@ export default function AdminPets() {  const { basePath } = useRole();
       setLoading(true);
       
       try {
-        await apiClient.delete(`/api/pets/${petId}`);
+        await apiClient.delete(`/api/admin/pets/${petId}`);
         // Remove the deleted pet from the state to update the UI instantly
         setPets(currentPets => currentPets.filter(pet => pet.id !== petId));
       } catch (err) {
@@ -91,8 +87,8 @@ export default function AdminPets() {  const { basePath } = useRole();
                 </td>
                 <td className="p-4">{pet.breed}</td>
                 <td className="p-4">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${pet.status === 'Available' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                        {pet.status}
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getPetStatusStyles(pet.status)}`}>
+                        {getPetStatusText(pet.status)}
                     </span>
                 </td>
                 <td className="p-4">

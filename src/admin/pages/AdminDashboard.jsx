@@ -3,8 +3,6 @@ import { BsBoxSeam, BsGraphUp } from 'react-icons/bs';
 import { FaRupeeSign, FaUsers, FaPaw } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
-// --- Reusable Components defined within the file for simplicity ---
-
 // Card for the key statistics at the top
 const StatCard = ({ icon, title, value, change, changeType }) => (
     <div className="bg-white p-6 rounded-2xl shadow-md flex items-center gap-6">
